@@ -4,7 +4,9 @@
 
 package main
 
-import "github.com/shal/robot/internal/bot"
+import (
+	"github.com/shal/robot/internal/bot"
+)
 
 func main() {
 	bot.Run()

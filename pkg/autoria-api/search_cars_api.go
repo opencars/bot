@@ -7,13 +7,15 @@ package autoria_api
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
 	"net/http"
+	"strings"
 )
 
 type CarSearchResultResponse struct {
 	CarsIDs []string `json:"ids"`
-	Count   int64   `json:"count"`
-	LastID  int64   `json:"last_id"`
+	Count   int64    `json:"count"`
+	LastID  int64    `json:"last_id"`
 }
 
 type CarResultResponse struct {
@@ -55,4 +57,24 @@ func (api *API) GetSearchCars(params ...CarSearchParam) (search CarSearchRespons
 	}
 
 	return search
+}
+
+func ParseCarSearchParams(url string) ([]CarSearchParam, error) {
+	query := strings.TrimPrefix(url, "https://auto.ria.com/search/?")
+	params := strings.Split(query, "&")
+
+	searchParams := make([]CarSearchParam, len(params))
+
+	for i, v := range params {
+		lexemes := strings.Split(v, "=")
+
+		if len(lexemes) != 2 {
+			return nil, errors.New("Invalid params")
+		}
+
+		searchParams[i].Value = lexemes[0]
+		searchParams[i].Key = lexemes[1]
+	}
+
+	return searchParams, nil
 }
