@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -17,8 +18,39 @@ import (
 )
 
 var (
-	listeners map[int64]chan struct{}
+	_once sync.Once
+	_app *App
 )
+
+type Subscription struct {
+	ChatID int64
+	LastIDs []string
+	Quitter chan struct{}
+	Running bool
+}
+
+// App is a singleton representation of application.
+type App struct {
+	Bot *tgbotapi.BotAPI
+	Subs map[int64]Subscription
+}
+
+func NewApp() *App {
+	_once.Do(func() {
+		_app = &App{
+			Bot: newBot(),
+			Subs: make(map[int64]Subscription),
+		}
+	})
+
+	return _app
+}
+
+func NewSubscription(ID int64) Subscription {
+	lastIDs := make([]string, 0)
+	stopper := make(chan struct{})
+	return Subscription{ID, lastIDs, stopper, false}
+}
 
 func newBot() *tgbotapi.BotAPI {
 	bot, err := tgbotapi.NewBotAPI(util.MustGetEnv("BOT_TOKEN"))
@@ -33,20 +65,20 @@ func newBot() *tgbotapi.BotAPI {
 	return bot
 }
 
-func processUpdate(u tgbotapi.Update, b *tgbotapi.BotAPI) {
+func (app *App) processUpdate(u tgbotapi.Update) {
 	if u.Message != nil {
-		processMsgUpdate(u.Message, b)
+		app.processMsgUpdate(u.Message)
 	}
 }
 
-func processMsgUpdate(m *tgbotapi.Message, b *tgbotapi.BotAPI) {
+func (app *App) processMsgUpdate(m *tgbotapi.Message) {
 	log.Printf("Recieved message from [%d] %s\n", m.Chat.ID, m.Chat.UserName)
 	log.Println(m.Text)
 
 	if isFollowCmd(m.Text) {
-		processFollowMsg(m, b)
+		app.processFollowMsg(m)
 	} else if isStopCmd(m.Text) {
-		close(listeners[m.Chat.ID])
+		app.Subs[m.Chat.ID].Stop()
 	}
 }
 
@@ -58,36 +90,27 @@ func isStopCmd(lexeme string) bool {
 	return strings.HasPrefix(lexeme, "/stop")
 }
 
-func processFollowMsg(m *tgbotapi.Message, b *tgbotapi.BotAPI) {
-	//lexemes := strings.Split(m.Text, " ")
-
-	//if len(lexemes) < 2 {
-	//	return
-	//} else if !strings.HasPrefix(lexemes[1], "https://auto.ria.com/search") {
-	//	return
-	//}
-
-	//autoRia := autoria_api.NewAPI(util.MustGetEnv("RIA_API_KEY"))
-	//params, err := autoria_api.ParseCarSearchParams(lexemes[1])
-
-	//if err != nil {
-	//	return
-	//}
-	//
-	//search := autoRia.GetSearchCars(params...)
-	//
-	//msg := tgbotapi.NewMessage(m.Chat.ID, "Hi")
-	//msg.Text = strings.Join(search.Result.SearchResult.CarsIDs, " ")
-	//
-	//if _, err = b.Send(msg); err != nil {
-	//	fmt.Print(err)
-	//}
-
-	registerListener(m.Chat.ID)
+func (app *App) processFollowMsg(m *tgbotapi.Message) {
+	app.Subs[m.Chat.ID] = NewSubscription(m.Chat.ID)
+	app.Subs[m.Chat.ID].Run()
 }
 
-func registerListener(ID int64) {
-	listeners[ID] = make(chan struct{})
+func (s Subscription) Stop() {
+	// Avoid closing closed channel.
+	if !s.Running {
+		return
+	}
+
+	close(s.Quitter)
+	s.Running = false
+}
+
+func (s Subscription) Run() {
+	// Stop previous goroutine, if it is running.
+	if s.Running {
+		close(s.Quitter)
+		s.Quitter = make(chan struct{})
+	}
 
 	go func(q chan struct{}) {
 		for {
@@ -95,27 +118,29 @@ func registerListener(ID int64) {
 			case <-q:
 				return
 			default:
-				fmt.Print("Hi --------> ", ID)
+				fmt.Print("Hi --------> ", s.ChatID)
 				time.Sleep(time.Second * 3)
 			}
 		}
-	}(listeners[ID])
+	}(s.Quitter)
+
+	// Mark subscription as "Running".
+	s.Running = true
 }
 
 func Run() {
-	listeners = make(map[int64]chan struct{})
-	bot := newBot()
+	app := NewApp()
 
 	updateConfig := tgbotapi.NewUpdate(0)
 	updateConfig.Timeout = 60
 
-	updates, err := bot.GetUpdatesChan(updateConfig)
+	updates, err := app.Bot.GetUpdatesChan(updateConfig)
 
 	if err != nil {
 		log.Println(err.Error())
 	}
 
 	for update := range updates {
-		processUpdate(update, bot)
+		app.processUpdate(update)
 	}
 }
