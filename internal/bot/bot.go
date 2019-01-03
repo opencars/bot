@@ -5,9 +5,10 @@
 package bot
 
 import (
-	"github.com/shal/robot/pkg/autoria-api"
+	"fmt"
 	"log"
 	"strings"
+	"time"
 )
 
 import (
@@ -15,58 +16,106 @@ import (
 	"github.com/shal/robot/pkg/util"
 )
 
-func Run() {
-	token := util.MustGetEnv("BOT_TOKEN")
-	apiKey := util.MustGetEnv("RIA_API_KEY")
+var (
+	listeners map[int64]chan struct{}
+)
 
-	bot, err := tgbotapi.NewBotAPI(token)
+func newBot() *tgbotapi.BotAPI {
+	bot, err := tgbotapi.NewBotAPI(util.MustGetEnv("BOT_TOKEN"))
 
 	if err != nil {
 		panic(err)
 	}
 
 	bot.Debug = true
+	log.Printf("Bot authorized %s", bot.Self.UserName)
 
-	log.Printf("Authorized on account %s", bot.Self.UserName)
+	return bot
+}
+
+func processUpdate(u tgbotapi.Update, b *tgbotapi.BotAPI) {
+	if u.Message != nil {
+		processMsgUpdate(u.Message, b)
+	}
+}
+
+func processMsgUpdate(m *tgbotapi.Message, b *tgbotapi.BotAPI) {
+	log.Printf("Recieved message from [%d] %s\n", m.Chat.ID, m.Chat.UserName)
+	log.Println(m.Text)
+
+	if isFollowCmd(m.Text) {
+		processFollowMsg(m, b)
+	} else if isStopCmd(m.Text) {
+		close(listeners[m.Chat.ID])
+	}
+}
+
+func isFollowCmd(lexeme string) bool {
+	return strings.HasPrefix(lexeme, "/follow")
+}
+
+func isStopCmd(lexeme string) bool {
+	return strings.HasPrefix(lexeme, "/stop")
+}
+
+func processFollowMsg(m *tgbotapi.Message, b *tgbotapi.BotAPI) {
+	//lexemes := strings.Split(m.Text, " ")
+
+	//if len(lexemes) < 2 {
+	//	return
+	//} else if !strings.HasPrefix(lexemes[1], "https://auto.ria.com/search") {
+	//	return
+	//}
+
+	//autoRia := autoria_api.NewAPI(util.MustGetEnv("RIA_API_KEY"))
+	//params, err := autoria_api.ParseCarSearchParams(lexemes[1])
+
+	//if err != nil {
+	//	return
+	//}
+	//
+	//search := autoRia.GetSearchCars(params...)
+	//
+	//msg := tgbotapi.NewMessage(m.Chat.ID, "Hi")
+	//msg.Text = strings.Join(search.Result.SearchResult.CarsIDs, " ")
+	//
+	//if _, err = b.Send(msg); err != nil {
+	//	fmt.Print(err)
+	//}
+
+	registerListener(m.Chat.ID)
+}
+
+func registerListener(ID int64) {
+	listeners[ID] = make(chan struct{})
+
+	go func(q chan struct{}) {
+		for {
+			select {
+			case <-q:
+				return
+			default:
+				fmt.Print("Hi --------> ", ID)
+				time.Sleep(time.Second * 3)
+			}
+		}
+	}(listeners[ID])
+}
+
+func Run() {
+	listeners = make(map[int64]chan struct{})
+	bot := newBot()
 
 	updateConfig := tgbotapi.NewUpdate(0)
 	updateConfig.Timeout = 60
 
 	updates, err := bot.GetUpdatesChan(updateConfig)
 
-	for update := range updates {
-		msg := update.Message
-
-		if msg == nil {
-			continue
-		}
-
-		log.Printf("Recieved message from [%d] %s\n", msg.Chat.ID, msg.Chat.UserName)
-		log.Println(msg.Text)
-
-		if strings.HasPrefix(msg.Text, "/follow") {
-			lexemes := strings.Split(msg.Text, " ")
-
-			if len(lexemes) < 2 {
-				continue
-			} else if !strings.HasPrefix(lexemes[1], "https://auto.ria.com/search") {
-				continue
-			}
-
-			autoRia := autoria_api.NewAPI(apiKey)
-
-			params, err := autoria_api.ParseCarSearchParams(lexemes[1])
-
-			if err != nil {
-				continue
-			}
-
-			search := autoRia.GetSearchCars(params...)
-
-			msg := tgbotapi.NewMessage(msg.Chat.ID, "Hi")
-			msg.Text = strings.Join(search.Result.SearchResult.CarsIDs, " ")
-			bot.Send(msg)
-		}
+	if err != nil {
+		log.Println(err.Error())
 	}
 
+	for update := range updates {
+		processUpdate(update, bot)
+	}
 }
