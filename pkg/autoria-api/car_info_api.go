@@ -20,11 +20,11 @@ type CarInfoResponse struct {
 }
 
 func (api *API) GetCarInfo(ID string) (car CarInfoResponse) {
-	url := fmt.Sprintf("/info%s?api_key=%s&auto_id=%s", api.base, api.key, ID)
+	resp, err := http.Get(api.BuildURL("/auto/info", fmt.Sprintf("auto_id=%s", ID)))
 
-	fmt.Print(url)
 
-	resp, err := http.Get(url)
+	fmt.Println("ID: ", ID)
+	fmt.Println("Response: ", resp)
 
 	if err != nil {
 		panic(err.Error())
@@ -35,6 +35,9 @@ func (api *API) GetCarInfo(ID string) (car CarInfoResponse) {
 	if err != nil {
 		panic(err.Error())
 	}
+
+	// Add prefix with website link.
+	car.LinkToView = "https://auto.ria.com" + car.LinkToView
 
 	return car
 }

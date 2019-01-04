@@ -17,7 +17,7 @@ type API struct {
 func NewAPI(key string) *API {
 	return &API{
 		key:  key,
-		base: "https://developers.ria.com/auto",
+		base: "https://developers.ria.com",
 	}
 }
 

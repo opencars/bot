@@ -26,55 +26,47 @@ type CarSearchResponse struct {
 	Result CarResultResponse `json:"result"`
 }
 
-type CarSearchParam struct {
-	Key   string
-	Value string
-}
+func (api *API) GetSearchCars(params map[string]string) (search CarSearchResponse) {
+	strParams := make([]string, 0)
 
-func (param CarSearchParam) String() string {
-	return fmt.Sprintf("%s=%s", param.Key, param.Value)
-}
+	fmt.Println(params)
 
-func (api *API) GetSearchCars(params ...CarSearchParam) (search CarSearchResponse) {
-	searchParams := make([]string, len(params))
-
-	for i, v := range params {
-		searchParams[i] = fmt.Sprint(v)
+	for k, v := range params {
+		strParams = append(strParams, fmt.Sprintf("%s=%s", k, v))
 	}
 
-	fmt.Print(api.BuildURL("search", searchParams...))
-
-	resp, err := http.Get(api.BuildURL("search", searchParams...))
+	resp, err := http.Get(api.BuildURL("/auto/search", strParams...))
 
 	if err != nil {
+		// TODO: Don't handle error in func, return error to user.
 		panic(err.Error())
 	}
 
 	err = json.NewDecoder(resp.Body).Decode(&search)
 
 	if err != nil {
+		// TODO: Don't handle error in func, return error to user.
 		panic(err.Error())
 	}
 
 	return search
 }
 
-func ParseCarSearchParams(url string) ([]CarSearchParam, error) {
+func ParseCarSearchParams(url string) (map[string]string, error) {
 	query := strings.TrimPrefix(url, "https://auto.ria.com/search/?")
 	params := strings.Split(query, "&")
 
-	searchParams := make([]CarSearchParam, len(params))
+	mapParams := make(map[string]string)
 
-	for i, v := range params {
+	for _, v := range params {
 		lexemes := strings.Split(v, "=")
 
 		if len(lexemes) != 2 {
-			return nil, errors.New("Invalid params")
+			return nil, errors.New("invalid params")
 		}
 
-		searchParams[i].Value = lexemes[0]
-		searchParams[i].Key = lexemes[1]
+		mapParams[lexemes[0]] = lexemes[1]
 	}
 
-	return searchParams, nil
+	return mapParams, nil
 }

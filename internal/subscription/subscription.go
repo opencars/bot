@@ -6,8 +6,6 @@ package subscription
 
 import (
 	"github.com/go-telegram-bot-api/telegram-bot-api"
-	"log"
-	"time"
 )
 
 type Subscription struct {
@@ -15,14 +13,21 @@ type Subscription struct {
 	LastIDs []string
 	Quitter chan struct{}
 	Running bool
+	Params map[string]string
 }
 
-func NewSubscription(chat *tgbotapi.Chat) *Subscription {
+func NewSubscription(chat *tgbotapi.Chat, params map[string]string) *Subscription {
 	lastIDs := make([]string, 0)
-	stopper := make(chan struct{})
-	return &Subscription{chat, lastIDs, stopper, false}
-}
+	quitter := make(chan struct{})
 
+	return &Subscription{
+		Chat: chat,
+		LastIDs: lastIDs,
+		Quitter: quitter,
+		Running: false,
+		Params: params,
+	}
+}
 
 func (s *Subscription) Stop() {
 	// Avoid closing closed channel.
@@ -34,7 +39,7 @@ func (s *Subscription) Stop() {
 	s.Running = false
 }
 
-func (s *Subscription) Start(b *tgbotapi.BotAPI) {
+func (s *Subscription) Start(callback func()) {
 	// Stop previous goroutine, if it is running.
 	if s.Running {
 		close(s.Quitter)
@@ -47,15 +52,7 @@ func (s *Subscription) Start(b *tgbotapi.BotAPI) {
 			case <-quit:
 				return
 			default:
-				msg := tgbotapi.NewMessage(s.Chat.ID, "Hello, " + s.Chat.FirstName)
-
-				if _, err := b.Send(msg); err != nil {
-					log.Print(err)
-				} else {
-					log.Printf("Successfully delivered to Chat: %d\n", s.Chat.ID)
-				}
-
-				time.Sleep(time.Second * 10)
+				callback()
 			}
 		}
 	}(s.Quitter)

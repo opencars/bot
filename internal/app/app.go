@@ -7,15 +7,21 @@ package app
 import (
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/shal/robot/internal/subscription"
+	"github.com/shal/robot/pkg/autoria-api"
 	"github.com/shal/robot/pkg/util"
 	"log"
 	"strings"
 	"sync"
+	"time"
 )
 
 var (
 	_once sync.Once
 	_app *App
+)
+
+const (
+	sleepTime = time.Second * 30
 )
 
 type App struct {
@@ -43,7 +49,7 @@ func newBot() *tgbotapi.BotAPI {
 
 	//bot.Debug = true
 
-	log.Printf("Bot authorized %s", bot.Self.UserName)
+	log.Printf("Bot authorized %s\n", bot.Self.UserName)
 
 	return bot
 }
@@ -62,11 +68,13 @@ func (app *App) processMsgUpdate(m *tgbotapi.Message) {
 		app.processFollowMsg(m)
 	} else if isStopCmd(m.Text) {
 		app.Subs[m.Chat.ID].Stop()
+	} else {
+		// TODO: Answer that command is invalid.
 	}
 }
 
 func isFollowCmd(lexeme string) bool {
-	return strings.HasPrefix(lexeme, "/start")
+	return strings.HasPrefix(lexeme, "/follow")
 }
 
 func isStopCmd(lexeme string) bool {
@@ -74,6 +82,55 @@ func isStopCmd(lexeme string) bool {
 }
 
 func (app *App) processFollowMsg(m *tgbotapi.Message) {
-	app.Subs[m.Chat.ID] = subscription.NewSubscription(m.Chat)
-	app.Subs[m.Chat.ID].Start(app.Bot)
+	lexemes := strings.Split(m.Text, " ")
+
+	if len(lexemes) < 2 {
+		// TODO: Show error.
+		return
+	} else if !strings.HasPrefix(lexemes[1], "https://auto.ria.com/search") {
+		// TODO: Show error.
+		return
+	}
+
+	params, err := autoria_api.ParseCarSearchParams(lexemes[1])
+
+	if err != nil {
+		// TODO: Show error.
+		log.Print(err)
+		return
+	}
+
+	autoRia := autoria_api.NewAPI(util.MustGetEnv("RIA_API_KEY"))
+
+	// Convert params to old type, because frontend and api have different types.
+	params, err = autoRia.ConvertNewToOld(params)
+
+	if err != nil {
+		// TODO: Show error.
+		log.Print(err)
+		return
+	}
+
+	app.Subs[m.Chat.ID] = subscription.NewSubscription(m.Chat, params)
+	app.Subs[m.Chat.ID].Start(func() {
+		chat := app.Subs[m.Chat.ID].Chat
+
+		search := autoRia.GetSearchCars(params)
+
+		for _, ID := range search.Result.SearchResult.CarsIDs {
+			car := autoRia.GetCarInfo(ID)
+
+			msg := tgbotapi.NewMessage(chat.ID, car.LinkToView)
+
+			if _, err := app.Bot.Send(msg); err != nil {
+				log.Print(err)
+			} else {
+				log.Printf("Successfully delivered to Chat: %d\n", chat.ID)
+			}
+
+			time.Sleep(time.Second * 3)
+		}
+
+		time.Sleep(sleepTime)
+	})
 }
