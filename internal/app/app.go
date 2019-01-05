@@ -115,10 +115,22 @@ func (app *App) processFollowMsg(m *tgbotapi.Message) {
 	app.Subs[m.Chat.ID].Start(func() {
 		chat := app.Subs[m.Chat.ID].Chat
 
-		search := autoRia.GetSearchCars(params)
+		search, err := autoRia.GetSearchCars(params)
+
+		if err != nil {
+			// TODO: Show error.
+			log.Print(err)
+			return
+		}
 
 		for _, ID := range search.Result.SearchResult.CarsIDs {
-			car := autoRia.GetCarInfo(ID)
+			car, err := autoRia.GetCarInfo(ID)
+
+			if err != nil {
+				// TODO: Show error.
+				log.Print(err)
+				return
+			}
 
 			msg := tgbotapi.NewMessage(chat.ID, car.LinkToView)
 

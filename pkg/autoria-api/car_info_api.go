@@ -19,25 +19,26 @@ type CarInfoResponse struct {
 	LinkToView       string `json:"linkToView"`
 }
 
-func (api *API) GetCarInfo(ID string) (car CarInfoResponse) {
+func (api *API) GetCarInfo(ID string) (car CarInfoResponse, err error) {
 	resp, err := http.Get(api.BuildURL("/auto/info", fmt.Sprintf("auto_id=%s", ID)))
-
 
 	fmt.Println("ID: ", ID)
 	fmt.Println("Response: ", resp)
 
 	if err != nil {
-		panic(err.Error())
+		// TODO: Return nil.
+		return CarInfoResponse{}, err
 	}
 
 	err = json.NewDecoder(resp.Body).Decode(&car)
 
 	if err != nil {
-		panic(err.Error())
+		// TODO: Return nil.
+		return CarInfoResponse{}, err
 	}
 
 	// Add prefix with website link.
 	car.LinkToView = "https://auto.ria.com" + car.LinkToView
 
-	return car
+	return car, nil
 }

@@ -26,7 +26,7 @@ type CarSearchResponse struct {
 	Result CarResultResponse `json:"result"`
 }
 
-func (api *API) GetSearchCars(params map[string]string) (search CarSearchResponse) {
+func (api *API) GetSearchCars(params map[string]string) (CarSearchResponse, error) {
 	strParams := make([]string, 0)
 
 	fmt.Println(params)
@@ -38,18 +38,19 @@ func (api *API) GetSearchCars(params map[string]string) (search CarSearchRespons
 	resp, err := http.Get(api.BuildURL("/auto/search", strParams...))
 
 	if err != nil {
-		// TODO: Don't handle error in func, return error to user.
-		panic(err.Error())
+		// TODO: Return nil.
+		return CarSearchResponse{}, err
 	}
 
+	var search CarSearchResponse
 	err = json.NewDecoder(resp.Body).Decode(&search)
 
 	if err != nil {
-		// TODO: Don't handle error in func, return error to user.
-		panic(err.Error())
+		// TODO: Return nil.
+		return CarSearchResponse{}, err
 	}
 
-	return search
+	return search, nil
 }
 
 func ParseCarSearchParams(url string) (map[string]string, error) {
