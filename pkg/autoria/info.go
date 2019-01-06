@@ -2,7 +2,7 @@
 // This software may be modified and distributed under the terms
 // of the MIT license. See the LICENSE file for details.
 
-package autoria_api
+package autoria
 
 import (
 	"encoding/json"
@@ -19,22 +19,20 @@ type CarInfoResponse struct {
 	LinkToView       string `json:"linkToView"`
 }
 
-func (api *API) GetCarInfo(ID string) (car CarInfoResponse, err error) {
+func (api *API) GetCarInfo(ID string) (car *CarInfoResponse, err error) {
 	resp, err := http.Get(api.BuildURL("/auto/info", fmt.Sprintf("auto_id=%s", ID)))
 
 	fmt.Println("ID: ", ID)
 	fmt.Println("Response: ", resp)
 
 	if err != nil {
-		// TODO: Return nil.
-		return CarInfoResponse{}, err
+		return nil, err
 	}
 
 	err = json.NewDecoder(resp.Body).Decode(&car)
 
 	if err != nil {
-		// TODO: Return nil.
-		return CarInfoResponse{}, err
+		return nil, err
 	}
 
 	// Add prefix with website link.

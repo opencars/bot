@@ -2,14 +2,17 @@
 // This software may be modified and distributed under the terms
 // of the MIT license. See the LICENSE file for details.
 
-package autoria_api
+package autoria
 
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/http"
+)
+
+import (
+	"github.com/pkg/errors"
 )
 
 func (api *API) baseConvert(endpoint string, params map[string]string) (map[string]string, error) {
@@ -42,11 +45,8 @@ func (api *API) baseConvert(endpoint string, params map[string]string) (map[stri
 
 		converted := data.(map[string]interface{})["converted"].(map[string]interface{})
 
-		i := 0
-
 		res := make(map[string]string)
 		for k, v := range converted {
-			i++
 			res[k] = fmt.Sprint(v)
 		}
 

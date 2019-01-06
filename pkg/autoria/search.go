@@ -2,7 +2,7 @@
 // This software may be modified and distributed under the terms
 // of the MIT license. See the LICENSE file for details.
 
-package autoria_api
+package autoria
 
 import (
 	"encoding/json"
@@ -26,7 +26,7 @@ type CarSearchResponse struct {
 	Result CarResultResponse `json:"result"`
 }
 
-func (api *API) GetSearchCars(params map[string]string) (CarSearchResponse, error) {
+func (api *API) GetSearchCars(params map[string]string) (*CarSearchResponse, error) {
 	strParams := make([]string, 0)
 
 	fmt.Println(params)
@@ -38,16 +38,14 @@ func (api *API) GetSearchCars(params map[string]string) (CarSearchResponse, erro
 	resp, err := http.Get(api.BuildURL("/auto/search", strParams...))
 
 	if err != nil {
-		// TODO: Return nil.
-		return CarSearchResponse{}, err
+		return nil, err
 	}
 
-	var search CarSearchResponse
-	err = json.NewDecoder(resp.Body).Decode(&search)
+	search := &CarSearchResponse{}
+	err = json.NewDecoder(resp.Body).Decode(search)
 
 	if err != nil {
-		// TODO: Return nil.
-		return CarSearchResponse{}, err
+		return nil, err
 	}
 
 	return search, nil

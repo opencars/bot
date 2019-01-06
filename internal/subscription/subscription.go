@@ -5,15 +5,16 @@
 package subscription
 
 import (
+	"fmt"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 type Subscription struct {
-	Chat *tgbotapi.Chat
+	Chat    *tgbotapi.Chat
 	LastIDs []string
 	Quitter chan struct{}
 	Running bool
-	Params map[string]string
+	Params  map[string]string
 }
 
 func NewSubscription(chat *tgbotapi.Chat, params map[string]string) *Subscription {
@@ -21,11 +22,11 @@ func NewSubscription(chat *tgbotapi.Chat, params map[string]string) *Subscriptio
 	quitter := make(chan struct{})
 
 	return &Subscription{
-		Chat: chat,
+		Chat:    chat,
 		LastIDs: lastIDs,
 		Quitter: quitter,
 		Running: false,
-		Params: params,
+		Params:  params,
 	}
 }
 
@@ -36,10 +37,13 @@ func (s *Subscription) Stop() {
 	}
 
 	close(s.Quitter)
+
+	fmt.Println("Stop Running 1: ", s.Running)
 	s.Running = false
+	fmt.Println("Stop Running 2: ", s.Running)
 }
 
-func (s *Subscription) Start(callback func()) {
+func (s *Subscription) Start(callback func(chan struct{})) {
 	// Stop previous goroutine, if it is running.
 	if s.Running {
 		close(s.Quitter)
@@ -50,13 +54,16 @@ func (s *Subscription) Start(callback func()) {
 		for {
 			select {
 			case <-quit:
+				fmt.Println("Quit was called. Test 1")
 				return
 			default:
-				callback()
+				callback(s.Quitter)
 			}
 		}
 	}(s.Quitter)
 
 	// Mark subscription as "Running".
+	fmt.Println("Start Running 1: ", s.Running)
 	s.Running = true
+	fmt.Println("Start Running 2: ", s.Running)
 }

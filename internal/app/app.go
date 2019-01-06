@@ -5,9 +5,10 @@
 package app
 
 import (
+	"fmt"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/shal/robot/internal/subscription"
-	"github.com/shal/robot/pkg/autoria-api"
+	"github.com/shal/robot/pkg/autoria"
 	"github.com/shal/robot/pkg/util"
 	"log"
 	"strings"
@@ -17,22 +18,22 @@ import (
 
 var (
 	_once sync.Once
-	_app *App
+	_app  *App
 )
 
 const (
-	sleepTime = time.Second * 30
+	sleepTime = time.Hour
 )
 
 type App struct {
-	Bot *tgbotapi.BotAPI
+	Bot  *tgbotapi.BotAPI
 	Subs map[int64]*subscription.Subscription
 }
 
 func NewApp() *App {
 	_once.Do(func() {
 		_app = &App{
-			Bot: newBot(),
+			Bot:  newBot(),
 			Subs: make(map[int64]*subscription.Subscription),
 		}
 	})
@@ -67,9 +68,14 @@ func (app *App) processMsgUpdate(m *tgbotapi.Message) {
 	if isFollowCmd(m.Text) {
 		app.processFollowMsg(m)
 	} else if isStopCmd(m.Text) {
+		//if _, ok := app.Subs[m.Chat.ID]; ok {
 		app.Subs[m.Chat.ID].Stop()
+		//} else {/
+		//	app.SendErrorMsg(m.Chat, "You are not subscribed to updates")
+		//}
 	} else {
-		// TODO: Answer that command is invalid.
+		text := fmt.Sprintf("Invalid command %s", strings.Split(m.Text, " ")[0])
+		app.SendErrorMsg(m.Chat, text)
 	}
 }
 
@@ -85,41 +91,38 @@ func (app *App) processFollowMsg(m *tgbotapi.Message) {
 	lexemes := strings.Split(m.Text, " ")
 
 	if len(lexemes) < 2 {
-		// TODO: Show error.
+		text := fmt.Sprintf("Something wrong with command argument")
+		app.SendErrorMsg(m.Chat, text)
 		return
 	} else if !strings.HasPrefix(lexemes[1], "https://auto.ria.com/search") {
-		// TODO: Show error.
+		text := fmt.Sprintf("Seems like link is wrong")
+		app.SendErrorMsg(m.Chat, text)
 		return
 	}
 
-	params, err := autoria_api.ParseCarSearchParams(lexemes[1])
+	params, err := autoria.ParseCarSearchParams(lexemes[1])
 
 	if err != nil {
-		// TODO: Show error.
-		log.Print(err)
+		app.SendErrorMsg(m.Chat, err.Error())
 		return
 	}
 
-	autoRia := autoria_api.NewAPI(util.MustGetEnv("RIA_API_KEY"))
+	autoRia := autoria.NewAPI(util.MustGetEnv("RIA_API_KEY"))
 
 	// Convert params to old type, because frontend and api have different types.
 	params, err = autoRia.ConvertNewToOld(params)
 
 	if err != nil {
-		// TODO: Show error.
-		log.Print(err)
+		app.SendErrorMsg(m.Chat, err.Error())
 		return
 	}
 
 	app.Subs[m.Chat.ID] = subscription.NewSubscription(m.Chat, params)
-	app.Subs[m.Chat.ID].Start(func() {
-		chat := app.Subs[m.Chat.ID].Chat
-
+	app.Subs[m.Chat.ID].Start(func(quitter chan struct{}) {
 		search, err := autoRia.GetSearchCars(params)
 
 		if err != nil {
-			// TODO: Show error.
-			log.Print(err)
+			app.SendErrorMsg(m.Chat, err.Error())
 			return
 		}
 
@@ -127,22 +130,35 @@ func (app *App) processFollowMsg(m *tgbotapi.Message) {
 			car, err := autoRia.GetCarInfo(ID)
 
 			if err != nil {
-				// TODO: Show error.
-				log.Print(err)
+				app.SendErrorMsg(m.Chat, err.Error())
 				return
 			}
 
-			msg := tgbotapi.NewMessage(chat.ID, car.LinkToView)
+			select {
+			case <-quitter:
+				fmt.Println("Quit was called. Test 2")
+				return
+			default:
+				msg := tgbotapi.NewMessage(m.Chat.ID, car.LinkToView)
 
-			if _, err := app.Bot.Send(msg); err != nil {
-				log.Print(err)
-			} else {
-				log.Printf("Successfully delivered to Chat: %d\n", chat.ID)
+				if _, err := app.Bot.Send(msg); err != nil {
+					log.Print(err)
+				} else {
+					log.Printf("Successfully delivered to chat: %d\n", m.Chat.ID)
+				}
+
+				time.Sleep(time.Second * 3)
 			}
-
-			time.Sleep(time.Second * 3)
 		}
-
-		time.Sleep(sleepTime)
 	})
+}
+func (app *App) SendErrorMsg(chat *tgbotapi.Chat, text string) {
+	msg := tgbotapi.NewMessage(chat.ID, text)
+	log.Println(text)
+
+	if _, err := app.Bot.Send(msg); err != nil {
+		log.Println(err)
+	} else {
+		log.Printf("Successfully delivered to chat: %d\n", chat.ID)
+	}
 }
