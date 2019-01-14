@@ -29,8 +29,6 @@ type CarSearchResponse struct {
 func (api *API) GetSearchCars(params map[string]string) (*CarSearchResponse, error) {
 	strParams := make([]string, 0)
 
-	fmt.Println(params)
-
 	for k, v := range params {
 		strParams = append(strParams, fmt.Sprintf("%s=%s", k, v))
 	}

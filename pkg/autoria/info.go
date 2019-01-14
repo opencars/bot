@@ -22,9 +22,6 @@ type CarInfoResponse struct {
 func (api *API) GetCarInfo(ID string) (car *CarInfoResponse, err error) {
 	resp, err := http.Get(api.BuildURL("/auto/info", fmt.Sprintf("auto_id=%s", ID)))
 
-	fmt.Println("ID: ", ID)
-	fmt.Println("Response: ", resp)
-
 	if err != nil {
 		return nil, err
 	}

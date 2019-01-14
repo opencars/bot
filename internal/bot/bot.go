@@ -5,6 +5,7 @@
 package bot
 
 import (
+	"github.com/shal/robot/pkg/util"
 	"log"
 )
 
@@ -14,12 +15,13 @@ import (
 )
 
 func Run() {
-	botApp := app.NewApp()
+	jsonPath := util.GetEnv("BOT_DATA_PATH", "/tmp/bot.json")
+
+	botApp := app.NewApp(jsonPath)
 
 	// Bot updates configuration.
 	updateConfig := tgbotapi.NewUpdate(0)
 	updateConfig.Timeout = 60
-
 
 	updates, err := botApp.Bot.GetUpdatesChan(updateConfig)
 

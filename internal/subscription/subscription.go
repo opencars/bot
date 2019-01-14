@@ -10,11 +10,11 @@ import (
 )
 
 type Subscription struct {
-	Chat    *tgbotapi.Chat
-	LastIDs []string
-	Quitter chan struct{}
-	Running bool
-	Params  map[string]string
+	Chat    *tgbotapi.Chat    `json:"chat"`
+	LastIDs []string          `json:"last_ids"`
+	Quitter chan struct{}     `json:"-"`
+	Running bool              `json:"running"`
+	Params  map[string]string `json:"params"`
 }
 
 func NewSubscription(chat *tgbotapi.Chat, params map[string]string) *Subscription {
@@ -45,7 +45,12 @@ func (s *Subscription) Stop() {
 
 func (s *Subscription) Start(callback func(chan struct{})) {
 	// Stop previous goroutine, if it is running.
+
+	fmt.Printf("Address Inside: %p\n", s)
+	fmt.Println("Running: ", s.Running)
 	if s.Running {
+		fmt.Println("Subscription is active, recreating...")
+		// TODO: Better way of goroutine stopping needed.
 		close(s.Quitter)
 		s.Quitter = make(chan struct{})
 	}
@@ -54,6 +59,7 @@ func (s *Subscription) Start(callback func(chan struct{})) {
 		for {
 			select {
 			case <-quit:
+				// TODO: Better way of goroutine stopping needed.
 				fmt.Println("Quit was called. Test 1")
 				return
 			default:

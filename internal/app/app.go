@@ -5,15 +5,20 @@
 package app
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
+	"os"
+	"strings"
+	"sync"
+	"time"
+)
+
+import (
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/shal/robot/internal/subscription"
 	"github.com/shal/robot/pkg/autoria"
 	"github.com/shal/robot/pkg/util"
-	"log"
-	"strings"
-	"sync"
-	"time"
 )
 
 var (
@@ -22,19 +27,21 @@ var (
 )
 
 const (
-	sleepTime = time.Hour
+	sleepTime = time.Minute
 )
 
 type App struct {
-	Bot  *tgbotapi.BotAPI
-	Subs map[int64]*subscription.Subscription
+	Bot      *tgbotapi.BotAPI
+	Subs     map[int64]*subscription.Subscription
+	FilePath string
 }
 
-func NewApp() *App {
+func NewApp(path string) *App {
 	_once.Do(func() {
 		_app = &App{
-			Bot:  newBot(),
-			Subs: make(map[int64]*subscription.Subscription),
+			Bot:      newBot(),
+			Subs:     make(map[int64]*subscription.Subscription),
+			FilePath: path,
 		}
 	})
 
@@ -47,8 +54,6 @@ func newBot() *tgbotapi.BotAPI {
 	if err != nil {
 		panic(err)
 	}
-
-	//bot.Debug = true
 
 	log.Printf("Bot authorized %s\n", bot.Self.UserName)
 
@@ -68,11 +73,14 @@ func (app *App) processMsgUpdate(m *tgbotapi.Message) {
 	if isFollowCmd(m.Text) {
 		app.processFollowMsg(m)
 	} else if isStopCmd(m.Text) {
-		//if _, ok := app.Subs[m.Chat.ID]; ok {
-		app.Subs[m.Chat.ID].Stop()
-		//} else {/
-		//	app.SendErrorMsg(m.Chat, "You are not subscribed to updates")
-		//}
+		if _, ok := app.Subs[m.Chat.ID]; ok {
+			app.Subs[m.Chat.ID].Stop()
+			delete(app.Subs, m.Chat.ID)
+
+			app.UpdateDataFile()
+		} else {
+			app.SendErrorMsg(m.Chat, "You are not subscribed to updates")
+		}
 	} else {
 		text := fmt.Sprintf("Invalid command %s", strings.Split(m.Text, " ")[0])
 		app.SendErrorMsg(m.Chat, text)
@@ -91,12 +99,10 @@ func (app *App) processFollowMsg(m *tgbotapi.Message) {
 	lexemes := strings.Split(m.Text, " ")
 
 	if len(lexemes) < 2 {
-		text := fmt.Sprintf("Something wrong with command argument")
-		app.SendErrorMsg(m.Chat, text)
+		app.SendErrorMsg(m.Chat, "Something wrong with command argument")
 		return
 	} else if !strings.HasPrefix(lexemes[1], "https://auto.ria.com/search") {
-		text := fmt.Sprintf("Seems like link is wrong")
-		app.SendErrorMsg(m.Chat, text)
+		app.SendErrorMsg(m.Chat, "Seems like link is wrong")
 		return
 	}
 
@@ -117,7 +123,16 @@ func (app *App) processFollowMsg(m *tgbotapi.Message) {
 		return
 	}
 
-	app.Subs[m.Chat.ID] = subscription.NewSubscription(m.Chat, params)
+	// Create subscription, if it was not created.
+	if _, ok := app.Subs[m.Chat.ID]; !ok {
+		app.Subs[m.Chat.ID] = subscription.NewSubscription(m.Chat, params)
+	}
+
+	if err != nil {
+		app.SendErrorMsg(m.Chat, err.Error())
+		return
+	}
+
 	app.Subs[m.Chat.ID].Start(func(quitter chan struct{}) {
 		search, err := autoRia.GetSearchCars(params)
 
@@ -136,13 +151,13 @@ func (app *App) processFollowMsg(m *tgbotapi.Message) {
 
 			select {
 			case <-quitter:
-				fmt.Println("Quit was called. Test 2")
+				log.Println("Quit was called")
 				return
 			default:
 				msg := tgbotapi.NewMessage(m.Chat.ID, car.LinkToView)
 
 				if _, err := app.Bot.Send(msg); err != nil {
-					log.Print(err)
+					log.Println(err)
 				} else {
 					log.Printf("Successfully delivered to chat: %d\n", m.Chat.ID)
 				}
@@ -150,7 +165,12 @@ func (app *App) processFollowMsg(m *tgbotapi.Message) {
 				time.Sleep(time.Second * 3)
 			}
 		}
+
+		time.Sleep(sleepTime)
 	})
+
+	// Add new subscription to data file.
+	app.UpdateDataFile()
 }
 func (app *App) SendErrorMsg(chat *tgbotapi.Chat, text string) {
 	msg := tgbotapi.NewMessage(chat.ID, text)
@@ -160,5 +180,24 @@ func (app *App) SendErrorMsg(chat *tgbotapi.Chat, text string) {
 		log.Println(err)
 	} else {
 		log.Printf("Successfully delivered to chat: %d\n", chat.ID)
+	}
+}
+
+func (app *App) UpdateDataFile() {
+	var values = make([]subscription.Subscription, 0)
+	for _, value := range app.Subs {
+		values = append(values, *value)
+	}
+
+	// Update data file with subscriptions.
+	file, err := os.OpenFile(app.FilePath, os.O_WRONLY|os.O_CREATE, 0644)
+
+	file.Truncate(0)
+	file.Seek(0,0)
+
+	if err != nil {
+		log.Println(err)
+	} else if err := json.NewEncoder(file).Encode(values); err != nil {
+		log.Printf("Data: %s\n", err.Error())
 	}
 }
