@@ -4,11 +4,12 @@
 
 ## Overview
 
-**These environment variables should be exposed**:
+List of supported environment variables  
 
-`BOT_TOKEN` - *telegram token for your bot*.
-
-`RIA_API_KEY` - *API token for interacting with Auto Ria API*.
+| Environment   | Description          |
+|---------------|----------------------|
+| `BOT_TOKEN`   | *Telegram API token* |
+| `RIA_API_KEY` | *AutoRia API token*  |
 
 ## Usage
 
