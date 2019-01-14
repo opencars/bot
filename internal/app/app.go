@@ -27,7 +27,7 @@ var (
 )
 
 const (
-	sleepTime = time.Minute
+	sleepTime = time.Hour
 )
 
 type App struct {
@@ -75,7 +75,7 @@ func (app *App) processMsgUpdate(m *tgbotapi.Message) {
 	} else if isStopCmd(m.Text) {
 		if _, ok := app.Subs[m.Chat.ID]; ok {
 			app.Subs[m.Chat.ID].Stop()
-			delete(app.Subs, m.Chat.ID)
+			//delete(app.Subs, m.Chat.ID)
 
 			app.UpdateDataFile()
 		} else {
@@ -125,7 +125,7 @@ func (app *App) processFollowMsg(m *tgbotapi.Message) {
 
 	// Create subscription, if it was not created.
 	if _, ok := app.Subs[m.Chat.ID]; !ok {
-		app.Subs[m.Chat.ID] = subscription.NewSubscription(m.Chat, params)
+		app.Subs[m.Chat.ID] = subscription.NewSubscription(params)
 	}
 
 	if err != nil {
@@ -141,7 +141,13 @@ func (app *App) processFollowMsg(m *tgbotapi.Message) {
 			return
 		}
 
-		for _, ID := range search.Result.SearchResult.CarsIDs {
+		// Get list of new cars.
+		newCars := app.Subs[m.Chat.ID].GetNewCars(search.Result.SearchResult.Cars)
+		// Store latest result.
+		app.Subs[m.Chat.ID].Cars = search.Result.SearchResult.Cars
+
+		// Loop only through new cars.
+		for _, ID := range newCars {
 			car, err := autoRia.GetCarInfo(ID)
 
 			if err != nil {
@@ -184,11 +190,6 @@ func (app *App) SendErrorMsg(chat *tgbotapi.Chat, text string) {
 }
 
 func (app *App) UpdateDataFile() {
-	var values = make([]subscription.Subscription, 0)
-	for _, value := range app.Subs {
-		values = append(values, *value)
-	}
-
 	// Update data file with subscriptions.
 	file, err := os.OpenFile(app.FilePath, os.O_WRONLY|os.O_CREATE, 0644)
 
@@ -197,7 +198,7 @@ func (app *App) UpdateDataFile() {
 
 	if err != nil {
 		log.Println(err)
-	} else if err := json.NewEncoder(file).Encode(values); err != nil {
+	} else if err := json.NewEncoder(file).Encode(app.Subs); err != nil {
 		log.Printf("Data: %s\n", err.Error())
 	}
 }

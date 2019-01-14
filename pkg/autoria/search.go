@@ -13,9 +13,9 @@ import (
 )
 
 type CarSearchResultResponse struct {
-	CarsIDs []string `json:"ids"`
-	Count   int64    `json:"count"`
-	LastID  int64    `json:"last_id"`
+	Cars   []string `json:"ids"`
+	Count  int64    `json:"count"`
+	LastID int64    `json:"last_id"`
 }
 
 type CarResultResponse struct {

@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
@@ -50,7 +51,7 @@ func (api *API) baseConvert(endpoint string, params map[string]string) (map[stri
 			res[k] = fmt.Sprint(v)
 		}
 
-		fmt.Println("Number of parameters:", len(res))
+		log.Println("Number of parameters:", len(res))
 
 		return res, nil
 	}
