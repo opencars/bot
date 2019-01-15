@@ -51,6 +51,8 @@ func NewApp(path string) *App {
 func newBot() *tgbotapi.BotAPI {
 	bot, err := tgbotapi.NewBotAPI(util.MustGetEnv("BOT_TOKEN"))
 
+	bot.Debug = util.GetEnv("LOG_LEVEL", "DEBUG") == "DEBUG"
+
 	if err != nil {
 		panic(err)
 	}
