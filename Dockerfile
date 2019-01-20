@@ -22,5 +22,6 @@ RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
 WORKDIR /app
 
 COPY --from=build /go/bin/robot ./robot
+COPY templates/ templates/
 
 ENTRYPOINT ["./robot"]
