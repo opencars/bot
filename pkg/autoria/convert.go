@@ -10,9 +10,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-)
 
-import (
 	"github.com/pkg/errors"
 )
 

@@ -7,9 +7,10 @@ package autoria
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"net/http"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 type CarSearchResultResponse struct {

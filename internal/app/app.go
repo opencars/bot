@@ -5,20 +5,20 @@
 package app
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"log"
 	"os"
 	"strings"
 	"sync"
 	"time"
-)
 
-import (
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/shal/robot/internal/subscription"
 	"github.com/shal/robot/pkg/autoria"
-	"github.com/shal/robot/pkg/util"
+	"github.com/shal/robot/pkg/env"
 )
 
 var (
@@ -49,9 +49,9 @@ func NewApp(path string) *App {
 }
 
 func newBot() *tgbotapi.BotAPI {
-	bot, err := tgbotapi.NewBotAPI(util.MustGetEnv("BOT_TOKEN"))
+	bot, err := tgbotapi.NewBotAPI(env.MustGet("BOT_TOKEN"))
 
-	bot.Debug = util.GetEnv("LOG_LEVEL", "DEBUG") == "DEBUG"
+	bot.Debug = env.Get("LOG_LEVEL", "DEBUG") == "DEBUG"
 
 	if err != nil {
 		panic(err)
@@ -62,24 +62,24 @@ func newBot() *tgbotapi.BotAPI {
 	return bot
 }
 
-func (app *App) ProcessUpdate(u tgbotapi.Update) {
+func (app *App) HandleUpdate(u tgbotapi.Update) {
 	if u.Message != nil {
-		app.processMsgUpdate(u.Message)
+		app.HandleMsg(u.Message)
 	}
 }
 
-func (app *App) processMsgUpdate(m *tgbotapi.Message) {
+func (app *App) HandleMsg(m *tgbotapi.Message) {
 	log.Printf("Recieved message from [%d] %s\n", m.Chat.ID, m.Chat.UserName)
 	log.Println(m.Text)
 
 	if isFollowCmd(m.Text) {
-		app.processFollowMsg(m)
+		app.HandleFollowing(m)
 	} else if isStopCmd(m.Text) {
 		if _, ok := app.Subs[m.Chat.ID]; ok {
 			app.Subs[m.Chat.ID].Stop()
 			//delete(app.Subs, m.Chat.ID)
 
-			app.UpdateDataFile()
+			app.UpdateData()
 		} else {
 			app.SendErrorMsg(m.Chat, "You are not subscribed to updates")
 		}
@@ -97,7 +97,7 @@ func isStopCmd(lexeme string) bool {
 	return strings.HasPrefix(lexeme, "/stop")
 }
 
-func (app *App) processFollowMsg(m *tgbotapi.Message) {
+func (app *App) HandleFollowing(m *tgbotapi.Message) {
 	lexemes := strings.Split(m.Text, " ")
 
 	if len(lexemes) < 2 {
@@ -115,7 +115,7 @@ func (app *App) processFollowMsg(m *tgbotapi.Message) {
 		return
 	}
 
-	autoRia := autoria.NewAPI(util.MustGetEnv("RIA_API_KEY"))
+	autoRia := autoria.NewAPI(env.MustGet("RIA_API_KEY"))
 
 	// Convert params to old type, because frontend and api have different types.
 	params, err = autoRia.ConvertNewToOld(params)
@@ -144,41 +144,47 @@ func (app *App) processFollowMsg(m *tgbotapi.Message) {
 		}
 
 		// Get list of new cars.
-		newCars := app.Subs[m.Chat.ID].GetNewCars(search.Result.SearchResult.Cars)
+		newCarIDs := app.Subs[m.Chat.ID].GetNewCars(search.Result.SearchResult.Cars)
 		// Store latest result.
 		app.Subs[m.Chat.ID].Cars = search.Result.SearchResult.Cars
 
-		// Loop only through new cars.
-		for _, ID := range newCars {
-			car, err := autoRia.GetCarInfo(ID)
+		newCars := make([]autoria.CarInfoResponse, len(newCarIDs))
+
+		for i, ID := range newCarIDs {
+			car, err := autoRia.CarInfo(ID)
 
 			if err != nil {
-				app.SendErrorMsg(m.Chat, err.Error())
-				return
+				log.Println(err)
 			}
 
-			select {
-			case <-quitter:
-				log.Println("Quit was called")
-				return
-			default:
-				msg := tgbotapi.NewMessage(m.Chat.ID, car.LinkToView)
+			newCars[i] = *car
 
-				if _, err := app.Bot.Send(msg); err != nil {
-					log.Println(err)
-				} else {
-					log.Printf("Successfully delivered to chat: %d\n", m.Chat.ID)
-				}
+		}
 
-				time.Sleep(time.Second * 3)
-			}
+		tpl, err := template.ParseFiles("templates/message.tpl")
+		if err != nil {
+			log.Println(err)
+		}
+
+		buff := bytes.Buffer{}
+		if err := tpl.Execute(&buff, newCars); err != nil {
+			log.Println(err)
+		}
+
+		msg := tgbotapi.NewMessage(m.Chat.ID, buff.String())
+		msg.ParseMode = tgbotapi.ModeHTML
+
+		if _, err := app.Bot.Send(msg); err != nil {
+			log.Println(err)
+		} else {
+			log.Printf("Successfully delivered to chat: %d\n", m.Chat.ID)
 		}
 
 		time.Sleep(sleepTime)
 	})
 
 	// Add new subscription to data file.
-	app.UpdateDataFile()
+	app.UpdateData()
 }
 func (app *App) SendErrorMsg(chat *tgbotapi.Chat, text string) {
 	msg := tgbotapi.NewMessage(chat.ID, text)
@@ -191,12 +197,12 @@ func (app *App) SendErrorMsg(chat *tgbotapi.Chat, text string) {
 	}
 }
 
-func (app *App) UpdateDataFile() {
+func (app *App) UpdateData() {
 	// Update data file with subscriptions.
 	file, err := os.OpenFile(app.FilePath, os.O_WRONLY|os.O_CREATE, 0644)
 
 	file.Truncate(0)
-	file.Seek(0,0)
+	file.Seek(0, 0)
 
 	if err != nil {
 		log.Println(err)

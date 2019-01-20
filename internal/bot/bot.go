@@ -5,17 +5,15 @@
 package bot
 
 import (
-	"github.com/shal/robot/pkg/util"
 	"log"
-)
 
-import (
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/shal/robot/internal/app"
+	"github.com/shal/robot/pkg/env"
 )
 
 func Run() {
-	jsonPath := util.GetEnv("BOT_DATA_PATH", "/tmp/bot.json")
+	jsonPath := env.Get("BOT_DATA_PATH", "/tmp/bot.json")
 
 	botApp := app.NewApp(jsonPath)
 
@@ -31,6 +29,6 @@ func Run() {
 
 	// Triggers, when new update pushed to channel.
 	for update := range updates {
-		botApp.ProcessUpdate(update)
+		botApp.HandleUpdate(update)
 	}
 }

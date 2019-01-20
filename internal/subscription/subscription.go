@@ -20,7 +20,6 @@ func NewSubscription(params map[string]string) *Subscription {
 	quitter := make(chan struct{})
 
 	return &Subscription{
-		//ChatID:  chat.ID,
 		Cars:    lastIDs,
 		quitter: quitter,
 		Active:  false,
@@ -62,11 +61,11 @@ func (s *Subscription) Start(callback func(chan struct{})) {
 }
 
 func (s *Subscription) carExist(carID string) bool {
-		for _, car := range s.Cars {
-			if car == carID {
-				return true
-			}
+	for _, car := range s.Cars {
+		if car == carID {
+			return true
 		}
+	}
 
 	return false
 }
