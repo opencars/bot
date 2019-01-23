@@ -23,5 +23,11 @@ func NewAPI(key string) *API {
 
 func (api *API) BuildURL(path string, params ...string) string {
 	options := strings.Join(params, "&")
-	return fmt.Sprintf("%s/%s?api_key=%s&%s", api.base, path, api.key, options)
+
+
+	if len(options) > 0 {
+		return fmt.Sprintf("%s/%s?api_key=%s&%s", api.base, path, api.key, options)
+	} else {
+		return fmt.Sprintf("%s/%s?api_key=%s", api.base, path, api.key)
+	}
 }

@@ -1,11 +1,12 @@
-<b>{{ len . }}</b> автомобилей добавлено!
+<b>{{ len . }}</b> автомобилей найдено!
 
 {{ range $i, $car := . -}}
-<b>Автомобиль: </b><code>{{ .MarkName }} {{ .ModelName }} {{ .Car.Year }}</code>
-<b>Город: </b><code>{{ .LocationCityName }}</code>
-<b>Пробег: </b><code>{{ .Car.Race }}</code>
-<b>Коробка: </b><code>{{ .Car.GearboxName }}</code>
-<b>Топливо: </b><code>{{ .Car.FuelName }}</code>
-<a href="{{ .LinkToView }}">Детали</a>
+<b>Автомобиль: </b>{{ .MarkName }} {{ .ModelName }} {{ .Car.Year }}
+<b>Город: </b>{{ .LocationCityName }}
+<b>Пробег: </b>{{ .Car.Race }}
+<b>Коробка: </b>{{ .Car.GearboxName }}
+<b>Топливо: </b>{{ .Car.FuelName }}
+<b>Детальнее: </b>/auto_{{ .Car.AutoID }}
+<a href="{{ .LinkToView }}">Сайт</a>
 
 {{ end }}

@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/shal/robot/pkg/openalpr"
 	"html/template"
 	"log"
 	"os"
@@ -31,17 +32,19 @@ const (
 )
 
 type App struct {
-	Bot      *tgbotapi.BotAPI
-	Subs     map[int64]*subscription.Subscription
-	FilePath string
+	Bot        *tgbotapi.BotAPI
+	Recognizer *openalpr.API
+	Subs       map[int64]*subscription.Subscription
+	FilePath   string
 }
 
-func NewApp(path string) *App {
+func NewApp(path, url string) *App {
 	_once.Do(func() {
 		_app = &App{
-			Bot:      newBot(),
-			Subs:     make(map[int64]*subscription.Subscription),
-			FilePath: path,
+			Bot:        newBot(),
+			Recognizer: &openalpr.API{URL: url},
+			Subs:       make(map[int64]*subscription.Subscription),
+			FilePath:   path,
 		}
 	})
 
@@ -77,12 +80,13 @@ func (app *App) HandleMsg(m *tgbotapi.Message) {
 	} else if isStopCmd(m.Text) {
 		if _, ok := app.Subs[m.Chat.ID]; ok {
 			app.Subs[m.Chat.ID].Stop()
-			//delete(app.Subs, m.Chat.ID)
 
 			app.UpdateData()
 		} else {
 			app.SendErrorMsg(m.Chat, "You are not subscribed to updates")
 		}
+	} else if isAutoInfoCmd(m.Text) {
+		app.HandleCarInfo(m)
 	} else {
 		text := fmt.Sprintf("Invalid command %s", strings.Split(m.Text, " ")[0])
 		app.SendErrorMsg(m.Chat, text)
@@ -95,6 +99,57 @@ func isFollowCmd(lexeme string) bool {
 
 func isStopCmd(lexeme string) bool {
 	return strings.HasPrefix(lexeme, "/stop")
+}
+
+func isAutoInfoCmd(lexeme string) bool {
+	return strings.HasPrefix(lexeme, "/auto_")
+}
+
+func (app *App) HandleCarInfo(m *tgbotapi.Message) {
+	lexemes := strings.Split(m.Text, "_")
+
+	if len(lexemes) < 2 {
+		app.SendErrorMsg(m.Chat, "Something wrong with command argument")
+		return
+	}
+
+	carID := lexemes[1]
+
+	autoRia := autoria.NewAPI(env.MustGet("RIA_API_KEY"))
+	resp, err := autoRia.CarPhotos(carID)
+
+	if err != nil {
+		app.SendErrorMsg(m.Chat, "Seems like ID is wrong")
+		return
+	}
+
+	for _, photo := range resp.Photos {
+		resp, err := app.Recognizer.Recognize(photo.URL())
+
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+
+		plate, err := resp.Plate()
+
+		if err == nil {
+			msg := tgbotapi.NewMessage(m.Chat.ID, "Номер: " + plate)
+			if _, err := app.Bot.Send(msg); err != nil {
+				log.Println(err)
+			} else {
+				log.Printf("Successfully delivered to chat: %d\n", m.Chat.ID)
+			}
+			return
+		}
+	}
+
+	msg := tgbotapi.NewMessage(m.Chat.ID, "Номер не найден")
+	if _, err := app.Bot.Send(msg); err != nil {
+		log.Println(err)
+	} else {
+		log.Printf("Successfully delivered to chat: %d\n", m.Chat.ID)
+	}
 }
 
 func (app *App) HandleFollowing(m *tgbotapi.Message) {
@@ -173,6 +228,7 @@ func (app *App) HandleFollowing(m *tgbotapi.Message) {
 
 		msg := tgbotapi.NewMessage(m.Chat.ID, buff.String())
 		msg.ParseMode = tgbotapi.ModeHTML
+		msg.DisableWebPagePreview = true
 
 		if _, err := app.Bot.Send(msg); err != nil {
 			log.Println(err)

@@ -14,8 +14,9 @@ import (
 
 func Run() {
 	jsonPath := env.Get("BOT_DATA_PATH", "/tmp/bot.json")
+	alprURL  := env.Get("ALPR_URL", "http://alpr.robot.shanaakh.pro")
 
-	botApp := app.NewApp(jsonPath)
+	botApp := app.NewApp(jsonPath, alprURL)
 
 	// Bot updates configuration.
 	updateConfig := tgbotapi.NewUpdate(0)
