@@ -14,7 +14,7 @@ import (
 
 func Run() {
 	jsonPath := env.Get("BOT_DATA_PATH", "/tmp/bot.json")
-	alprURL  := env.Get("ALPR_URL", "http://alpr.robot.shanaakh.pro")
+	alprURL := env.Get("ALPR_URL", "http://alpr.opencars.pp.ua")
 
 	botApp := app.NewApp(jsonPath, alprURL)
 

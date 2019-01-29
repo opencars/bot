@@ -4,12 +4,13 @@
 
 ## Overview
 
-List of supported environment variables  
+List of supported environment variables
 
-| Environment   | Description          |
-|---------------|----------------------|
-| `BOT_TOKEN`   | *Telegram API token* |
-| `RIA_API_KEY` | *AutoRia API token*  |
+| Environment   | Description              |
+|---------------|--------------------------|
+| `BOT_TOKEN`   | *Telegram API token*     |
+| `RIA_API_KEY` | *AutoRia API token*      |
+| `ALPR_URL`    | *URL to ALPR web server* |
 
 ## Usage
 
