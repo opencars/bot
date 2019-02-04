@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/shal/robot/pkg/openalpr"
 	"html/template"
 	"log"
 	"os"
@@ -20,6 +19,8 @@ import (
 	"github.com/shal/robot/internal/subscription"
 	"github.com/shal/robot/pkg/autoria"
 	"github.com/shal/robot/pkg/env"
+	"github.com/shal/robot/pkg/openalpr"
+	"github.com/shal/robot/pkg/opencars"
 )
 
 var (
@@ -34,15 +35,17 @@ const (
 type App struct {
 	Bot        *tgbotapi.BotAPI
 	Recognizer *openalpr.API
+	Storage    *opencars.API
 	Subs       map[int64]*subscription.Subscription
 	FilePath   string
 }
 
-func NewApp(path, url string) *App {
+func NewApp(path, recognizerUrl, storageUrl string) *App {
 	_once.Do(func() {
 		_app = &App{
 			Bot:        newBot(),
-			Recognizer: &openalpr.API{URL: url},
+			Recognizer: &openalpr.API{URL: recognizerUrl},
+			Storage:    &opencars.API{URL: storageUrl},
 			Subs:       make(map[int64]*subscription.Subscription),
 			FilePath:   path,
 		}
@@ -132,24 +135,42 @@ func (app *App) HandleCarInfo(m *tgbotapi.Message) {
 		}
 
 		plate, err := resp.Plate()
-
 		if err == nil {
-			msg := tgbotapi.NewMessage(m.Chat.ID, "Номер: " + plate)
+			transport, err := app.Storage.SearchTransport(plate)
+
+			fmt.Println(transport)
+
+			if err != nil {
+				log.Println(err)
+			}
+
+			tpl, err := template.ParseFiles("templates/car_info.tpl")
+			if err != nil {
+				log.Println(err)
+			}
+
+			buff := bytes.Buffer{}
+			if err := tpl.Execute(&buff, struct{
+				Cars []opencars.Transport
+				Number string
+			}{
+				transport, plate,
+			}); err != nil {
+				log.Println(err)
+			}
+
+			msg := tgbotapi.NewMessage(m.Chat.ID, buff.String())
+			msg.ParseMode = tgbotapi.ModeHTML
+
 			if _, err := app.Bot.Send(msg); err != nil {
 				log.Println(err)
-			} else {
-				log.Printf("Successfully delivered to chat: %d\n", m.Chat.ID)
 			}
+
 			return
 		}
 	}
 
-	msg := tgbotapi.NewMessage(m.Chat.ID, "Номер не найден")
-	if _, err := app.Bot.Send(msg); err != nil {
-		log.Println(err)
-	} else {
-		log.Printf("Successfully delivered to chat: %d\n", m.Chat.ID)
-	}
+	app.SendErrorMsg(m.Chat, "Error")
 }
 
 func (app *App) HandleFollowing(m *tgbotapi.Message) {
