@@ -1,7 +1,3 @@
-// Copyright (C) 2019 Ali Shanaakh, github@shanaakh.pro
-// This software may be modified and distributed under the terms
-// of the MIT license. See the LICENSE file for details.
-
 package autoria
 
 import (
@@ -9,8 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 type CarSearchResultResponse struct {
@@ -60,7 +54,7 @@ func ParseCarSearchParams(url string) (map[string]string, error) {
 		lexemes := strings.Split(v, "=")
 
 		if len(lexemes) != 2 {
-			return nil, errors.New("invalid params")
+			return nil, New("invalid parameters")
 		}
 
 		mapParams[lexemes[0]] = lexemes[1]

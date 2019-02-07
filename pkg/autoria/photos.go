@@ -1,7 +1,3 @@
-// Copyright (C) 2019 Ali Shanaakh, github@shanaakh.pro
-// This software may be modified and distributed under the terms
-// of the MIT license. See the LICENSE file for details.
-
 package autoria
 
 import (
@@ -28,7 +24,7 @@ type CarPhotosResponse struct {
 }
 
 func (photo Photo) URL() string {
-	return photo.Formats[len(photo.Formats) - 1]
+	return photo.Formats[len(photo.Formats)-1]
 }
 
 func (api *API) CarPhotos(ID string) (res *CarPhotosResponse, err error) {

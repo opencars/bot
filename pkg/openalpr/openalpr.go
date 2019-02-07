@@ -1,17 +1,32 @@
-// Copyright (C) 2019 Ali Shanaakh, github@shanaakh.pro
-// This software may be modified and distributed under the terms
-// of the MIT license. See the LICENSE file for details.
-
 package openalpr
 
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/shal/robot/pkg/match"
 	"io/ioutil"
 	"net/http"
-
-	"github.com/pkg/errors"
+	"sort"
 )
+
+type Candidate struct {
+	Confidence float64
+	Plate      string
+}
+
+func (c Candidate) Priority() int {
+	priority := int(c.Confidence)
+
+	if len(c.Plate) == 8 {
+		priority += 100
+	}
+
+	if match.EuroPlates(c.Plate) {
+		priority += 100
+	}
+
+	return priority
+}
 
 type PlateRecognizerCoordinate struct {
 	X int `json:"x"`
@@ -19,6 +34,7 @@ type PlateRecognizerCoordinate struct {
 }
 
 type ResponseResult struct {
+	Candidates       []Candidate                 `json:"candidates"`
 	Confidence       float64                     `json:"confidence"`
 	Coordinates      []PlateRecognizerCoordinate `json:"coordinates"`
 	Plate            string                      `json:"plate"`
@@ -36,16 +52,27 @@ type Response struct {
 	Results          []ResponseResult `json:"results"`
 }
 
-func (resp Response) Plate() (string, error) {
-	if len(resp.Results) < 1 {
-		return "", errors.New("plates was not recognized")
-	} else if len(resp.Results) > 1 {
-		return "", errors.New("too much candidates on the photo")
-	}
+func (res ResponseResult) FindBestCandidate() {
 
-	return resp.Results[0].Plate, nil
 }
 
+func (resp Response) Plate() (string, error) {
+	if len(resp.Results) < 1 {
+		return "", New("plates was not recognized")
+	} else if len(resp.Results) > 1 {
+		return "", New("too much candidates on the photo")
+	}
+
+	candidates := resp.Results[0].Candidates
+
+	sort.Slice(candidates, func(i, j int) bool {
+		return candidates[i].Priority() > candidates[j].Priority()
+	})
+
+	fmt.Println(candidates)
+
+	return candidates[0].Plate, nil
+}
 
 type API struct {
 	URL string

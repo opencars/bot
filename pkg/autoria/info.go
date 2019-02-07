@@ -1,7 +1,3 @@
-// Copyright (C) 2019 Ali Shanaakh, github@shanaakh.pro
-// This software may be modified and distributed under the terms
-// of the MIT license. See the LICENSE file for details.
-
 package autoria
 
 import (
@@ -27,7 +23,7 @@ type Car struct {
 	CategoryID   int    `json:"categoryId"`
 }
 
-type CarInfoResponse struct {
+type CarInfo struct {
 	LocationCityName string `json:"locationCityName"`
 	MarkName         string `json:"markName"`
 	MarkID           uint32 `json:"markId"`
@@ -40,7 +36,7 @@ type CarInfoResponse struct {
 	Car              Car    `json:"autoData"`
 }
 
-func (api *API) CarInfo(ID string) (car *CarInfoResponse, err error) {
+func (api *API) CarInfo(ID string) (car *CarInfo, err error) {
 	resp, err := http.Get(api.BuildURL("/auto/info", fmt.Sprintf("auto_id=%s", ID)))
 
 	if err != nil {
