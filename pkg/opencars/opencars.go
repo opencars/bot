@@ -1,7 +1,3 @@
-// Copyright (C) 2019 Ali Shanaakh, github@shanaakh.pro
-// This software may be modified and distributed under the terms
-// of the MIT license. See the LICENSE file for details.
-
 package opencars
 
 import (
@@ -12,7 +8,7 @@ import (
 )
 
 type API struct {
-	URL string
+	URI string
 }
 
 type Transport struct {
@@ -32,18 +28,15 @@ type Transport struct {
 	Number              string `json:"number"`
 }
 
-func (client *API) SearchTransport(number string) ([]Transport, error) {
-	query := fmt.Sprintf("%s/transport?number=%s", client.URL, number)
-	fmt.Println(query)
-	resp, err := http.Get(query)
-
-	fmt.Println(resp)
+func (client *API) Search(number string) ([]Transport, error) {
+	query := fmt.Sprintf("%s/transport?number=%s", client.URI, number)
+	response, err := http.Get(query)
 
 	if err != nil {
 		return nil, err
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(response.Body)
 
 	if err != nil {
 		return nil, err
@@ -51,9 +44,7 @@ func (client *API) SearchTransport(number string) ([]Transport, error) {
 
 	transport := make([]Transport, 0)
 
-	err = json.Unmarshal(body, &transport)
-
-	if err != nil {
+	if err = json.Unmarshal(body, &transport); err != nil {
 		return nil, err
 	}
 

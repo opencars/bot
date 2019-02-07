@@ -1,7 +1,3 @@
-// Copyright (C) 2019 Ali Shanaakh, github@shanaakh.pro
-// This software may be modified and distributed under the terms
-// of the MIT license. See the LICENSE file for details.
-
 package autoria
 
 import (
@@ -10,11 +6,9 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-
-	"github.com/pkg/errors"
 )
 
-func (api *API) baseConvert(endpoint string, params map[string]string) (map[string]string, error) {
+func (api *API) convert(endpoint string, params map[string]string) (map[string]string, error) {
 	strParams := make([]string, len(params))
 
 	for k, v := range params {
@@ -54,13 +48,14 @@ func (api *API) baseConvert(endpoint string, params map[string]string) (map[stri
 		return res, nil
 	}
 
-	return nil, errors.New(fmt.Sprintf("invalid response code: %d", resp.StatusCode))
+	err = New(fmt.Sprintf("invalid response code: %d", resp.StatusCode))
+	return nil, err
 }
 
 func (api *API) ConvertNewToOld(params map[string]string) (map[string]string, error) {
-	return api.baseConvert("/new_to_old", params)
+	return api.convert("/new_to_old", params)
 }
 
 func (api *API) ConvertOldToNew(params map[string]string) (map[string]string, error) {
-	return api.baseConvert("/old_to_new", params)
+	return api.convert("/old_to_new", params)
 }
