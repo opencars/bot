@@ -10,7 +10,7 @@ type API struct {
 	base string
 }
 
-func NewAPI(key string) *API {
+func New(key string) *API {
 	return &API{
 		key:  key,
 		base: "https://developers.ria.com",

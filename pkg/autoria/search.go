@@ -7,21 +7,19 @@ import (
 	"strings"
 )
 
-type CarSearchResultResponse struct {
+type SearchResultResponse struct {
 	Cars   []string `json:"ids"`
 	Count  int64    `json:"count"`
 	LastID int64    `json:"last_id"`
 }
 
-type CarResultResponse struct {
-	SearchResult CarSearchResultResponse `json:"search_result"`
+type SearchResponse struct {
+	Result struct{
+		SearchResult SearchResultResponse `json:"search_result"`
+	} `json:"result"`
 }
 
-type CarSearchResponse struct {
-	Result CarResultResponse `json:"result"`
-}
-
-func (api *API) GetSearchCars(params map[string]string) (*CarSearchResponse, error) {
+func (api *API) SearchCars(params map[string]string) (*SearchResponse, error) {
 	strParams := make([]string, 0)
 
 	for k, v := range params {
@@ -34,7 +32,7 @@ func (api *API) GetSearchCars(params map[string]string) (*CarSearchResponse, err
 		return nil, err
 	}
 
-	search := &CarSearchResponse{}
+	search := &SearchResponse{}
 	err = json.NewDecoder(resp.Body).Decode(search)
 
 	if err != nil {
@@ -44,7 +42,7 @@ func (api *API) GetSearchCars(params map[string]string) (*CarSearchResponse, err
 	return search, nil
 }
 
-func ParseCarSearchParams(url string) (map[string]string, error) {
+func ParseSearchParams(url string) (map[string]string, error) {
 	query := strings.TrimPrefix(url, "https://auto.ria.com/search/?")
 	params := strings.Split(query, "&")
 
@@ -54,7 +52,7 @@ func ParseCarSearchParams(url string) (map[string]string, error) {
 		lexemes := strings.Split(v, "=")
 
 		if len(lexemes) != 2 {
-			return nil, New("invalid parameters")
+			return nil, NewErr("invalid parameters")
 		}
 
 		mapParams[lexemes[0]] = lexemes[1]

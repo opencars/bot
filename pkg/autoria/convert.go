@@ -48,7 +48,7 @@ func (api *API) convert(endpoint string, params map[string]string) (map[string]s
 		return res, nil
 	}
 
-	err = New(fmt.Sprintf("invalid response code: %d", resp.StatusCode))
+	err = NewErr(fmt.Sprintf("invalid response code: %d", resp.StatusCode))
 	return nil, err
 }
 

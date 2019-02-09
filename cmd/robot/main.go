@@ -32,7 +32,7 @@ func main() {
 	})
 
 	autoRiaHandler := handlers.AutoRiaHandler{
-		API:           autoria.NewAPI(autoRiaURL),
+		API:           autoria.New(autoRiaURL),
 		Recognizer:    &openalpr.API{URL: alprURL},
 		Storage:       &opencars.API{URI: apiURL},
 		Subscriptions: make(map[int64]*subscription.Subscription),
