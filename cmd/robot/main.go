@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"regexp"
 
+	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/shal/robot/internal/bot"
 	"github.com/shal/robot/internal/subscription"
 	"github.com/shal/robot/pkg/autoria"
@@ -23,6 +25,11 @@ func main() {
 	autoRiaURL := env.MustGet("RIA_API_KEY")
 
 	tbot := bot.New(jsonPath, alprURL, apiURL)
+
+	tbot.HandleFunc("/start", func(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
+		text := fmt.Sprintf("Привіт, %s!", msg.Chat.FirstName)
+		handlers.Send(bot, msg.Chat, text)
+	})
 
 	autoRiaHandler := handlers.AutoRiaHandler{
 		API:           autoria.NewAPI(autoRiaURL),
