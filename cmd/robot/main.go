@@ -13,6 +13,8 @@ import (
 	"github.com/shal/robot/pkg/opencars"
 )
 
+// Looks still not very beautiful.
+// TODO: Consider refactoring "bot" library to make it's usage much cleaner.
 func main() {
 	jsonPath := env.Get("BOT_DATA_PATH", "/tmp/bot.json")
 	alprURL := env.Get("ALPR_URL", "http://alpr.opencars.pp.ua")

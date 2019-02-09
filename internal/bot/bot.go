@@ -1,7 +1,12 @@
 package bot
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
+	"os"
 	"regexp"
 	"strings"
 
@@ -11,21 +16,26 @@ import (
 	"github.com/shal/robot/pkg/opencars"
 )
 
+// Handler ...
 type Handler interface {
 	Handle(bot *tgbotapi.BotAPI, msg *tgbotapi.Message)
 }
 
+// HandlerFunc ...
 type HandlerFunc func(*tgbotapi.BotAPI, *tgbotapi.Message)
 
+// HandlerFunc ...
 func (f HandlerFunc) Handle(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 	f(bot, msg)
 }
 
+// MuxEntry ...
 type MuxEntry struct {
 	handler Handler
 	match   func(x string) bool
 }
 
+// Bot ...
 type Bot struct {
 	API        *tgbotapi.BotAPI
 	Recognizer *openalpr.API
@@ -34,6 +44,7 @@ type Bot struct {
 	Mux        []MuxEntry
 }
 
+// Handle ...
 func (bot *Bot) Handle(key string, handler Handler) {
 	bot.Mux = append(bot.Mux, MuxEntry{
 		handler: handler,
@@ -43,6 +54,7 @@ func (bot *Bot) Handle(key string, handler Handler) {
 	})
 }
 
+// HandleRegexp ...
 func (bot *Bot) HandleRegexp(regexp *regexp.Regexp, handler Handler) {
 	bot.Mux = append(bot.Mux, MuxEntry{
 		handler: handler,
@@ -52,6 +64,7 @@ func (bot *Bot) HandleRegexp(regexp *regexp.Regexp, handler Handler) {
 	})
 }
 
+// HandleFuncRegexp ...
 func (bot *Bot) HandleFuncRegexp(regexp *regexp.Regexp, handler func(*tgbotapi.BotAPI, *tgbotapi.Message)) {
 	bot.Mux = append(bot.Mux, MuxEntry{
 		handler: HandlerFunc(handler),
@@ -61,6 +74,7 @@ func (bot *Bot) HandleFuncRegexp(regexp *regexp.Regexp, handler func(*tgbotapi.B
 	})
 }
 
+// HandleFunc ...
 func (bot *Bot) HandleFunc(key string, handler func(*tgbotapi.BotAPI, *tgbotapi.Message)) {
 	bot.Mux = append(bot.Mux, MuxEntry{
 		handler: HandlerFunc(handler),
@@ -82,24 +96,34 @@ func (bot *Bot) handle(update tgbotapi.Update) {
 	}
 }
 
+// Listen
 func (bot *Bot) Listen() error {
-	// API updates configuration.
-	updateConfig := tgbotapi.NewUpdate(0)
-	updateConfig.Timeout = 60
+	host, exists := os.LookupEnv("HOST")
+	if !exists {
+		log.Panic("host is not specified")
+	}
 
-	updates, err := bot.API.GetUpdatesChan(updateConfig)
-
+	_, err := bot.API.SetWebhook(tgbotapi.NewWebhook(host))
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
 
-	// TODO: This should be concurrent, using webhook and server.
-	// Triggers, when new update pushed to channel.
-	for update := range updates {
+	// Should be thread safe out of the box.
+	path := fmt.Sprintf("/%s", bot.API.Token)
+	http.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		bytes, _ := ioutil.ReadAll(r.Body)
+		r.Body.Close()
+
+		update := tgbotapi.Update{}
+		json.Unmarshal(bytes, &update)
+
+		// Handle "Update".
 		bot.handle(update)
-	}
+	})
 
-	return nil
+	port := env.Get("PORT", "8080")
+
+	return http.ListenAndServe(":" + port, http.DefaultServeMux)
 }
 
 func New(path, recognizerUrl, storageUrl string) *Bot {
