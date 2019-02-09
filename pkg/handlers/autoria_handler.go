@@ -29,9 +29,8 @@ type AutoRiaHandler struct {
 func (h AutoRiaHandler) FollowHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 	lexemes := strings.Split(msg.Text, " ")
 
-	if len(lexemes) < 2 {
-		return
-	} else if !strings.HasPrefix(lexemes[1], "https://auto.ria.com/search") {
+	if len(lexemes) < 2 || !strings.HasPrefix(lexemes[1], "https://auto.ria.com/search") {
+		Send(bot, msg.Chat, "Помилковий запит.")
 		return
 	}
 
@@ -105,7 +104,8 @@ func (h AutoRiaHandler) FollowHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Messag
 
 func (h AutoRiaHandler) StopHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 	if _, ok := h.Subscriptions[msg.Chat.ID]; !ok {
-		Send(bot, msg.Chat, "You are not subscribed to updates")
+		Send(bot, msg.Chat, "Ви не підписані на оновлення.")
+		return
 	}
 
 	h.Subscriptions[msg.Chat.ID].Stop()
@@ -125,7 +125,7 @@ func (h AutoRiaHandler) CarInfoHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Messa
 	resp, err := autoRia.CarPhotos(carID)
 
 	if err != nil {
-		Send(bot, msg.Chat, "Seems like ID is wrong")
+		Send(bot, msg.Chat, "Неправильний ідентифікатор ☹️")
 		return
 	}
 

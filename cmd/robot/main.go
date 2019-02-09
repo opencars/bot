@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 	"regexp"
 
 	"github.com/shal/robot/internal/bot"
@@ -50,5 +51,11 @@ func main() {
 	}
 	tbot.HandleFuncRegexp(expr, autoRiaHandler.CarInfoHandler)
 
-	tbot.Listen()
+	// Host is required.
+	host, exists := os.LookupEnv("HOST")
+	if !exists {
+		log.Panic("host is not specified")
+	}
+
+	tbot.Listen(host, env.Get("PORT", "8080"))
 }
