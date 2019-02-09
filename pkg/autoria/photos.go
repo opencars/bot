@@ -17,7 +17,7 @@ type Photo struct {
 	Formats  []string `json:"formats"`
 }
 
-type CarPhotosResponse struct {
+type PhotosResponse struct {
 	Status int                    `json:"status"`
 	Data   map[string]interface{} `json:"data"`
 	Photos []Photo
@@ -27,7 +27,7 @@ func (photo Photo) URL() string {
 	return photo.Formats[len(photo.Formats)-1]
 }
 
-func (api *API) CarPhotos(ID string) (res *CarPhotosResponse, err error) {
+func (api *API) CarPhotos(ID string) (res *PhotosResponse, err error) {
 	resp, err := http.Get(api.BuildURL("auto/fotos/" + ID))
 	if err != nil {
 		return nil, err

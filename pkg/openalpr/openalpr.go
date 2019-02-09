@@ -9,9 +9,37 @@ import (
 	"sort"
 )
 
+type API struct {
+	URL string
+}
+
 type Candidate struct {
 	Confidence float64
 	Plate      string
+}
+
+type Coordinate struct {
+	X int `json:"x"`
+	Y int `json:"y"`
+}
+
+type Result struct {
+	Candidates       []Candidate  `json:"candidates"`
+	Confidence       float64      `json:"confidence"`
+	Coordinates      []Coordinate `json:"coordinates"`
+	Plate            string       `json:"plate"`
+	PlateIndex       int          `json:"plate_index"`
+	ProcessingTimeMs float64      `json:"processing_time_ms"`
+	Region           string       `json:"region"`
+	RegionConfidence int          `json:"region_confidence"`
+	RequestedTopN    int          `json:"requested_topn"`
+}
+
+type Response struct {
+	ImageHeight    int      `json:"img_height"`
+	ImageWidth     int      `json:"img_width"`
+	ProcessingTime float64  `json:"processing_time_ms"`
+	Results        []Result `json:"results"`
 }
 
 func (c Candidate) Priority() int {
@@ -28,55 +56,22 @@ func (c Candidate) Priority() int {
 	return priority
 }
 
-type PlateRecognizerCoordinate struct {
-	X int `json:"x"`
-	Y int `json:"y"`
-}
-
-type ResponseResult struct {
-	Candidates       []Candidate                 `json:"candidates"`
-	Confidence       float64                     `json:"confidence"`
-	Coordinates      []PlateRecognizerCoordinate `json:"coordinates"`
-	Plate            string                      `json:"plate"`
-	PlateIndex       int                         `json:"plate_index"`
-	ProcessingTimeMs float64                     `json:"processing_time_ms"`
-	Region           string                      `json:"region"`
-	RegionConfidence int                         `json:"region_confidence"`
-	RequestedTopN    int                         `json:"requested_topn"`
-}
-
-type Response struct {
-	ImgHeight        int              `json:"img_height"`
-	ImgWidth         int              `json:"img_width"`
-	ProcessingTimeMs float64          `json:"processing_time_ms"`
-	Results          []ResponseResult `json:"results"`
-}
-
-func (res ResponseResult) FindBestCandidate() {
-
-}
-
-func (resp Response) Plate() (string, error) {
-	if len(resp.Results) < 1 {
+func (r Response) Plate() (string, error) {
+	if len(r.Results) < 1 {
 		return "", New("plates was not recognized")
-	} else if len(resp.Results) > 1 {
+	} else if len(r.Results) > 1 {
 		return "", New("too much candidates on the photo")
 	}
 
-	candidates := resp.Results[0].Candidates
+	candidates := r.Results[0].Candidates
 
 	sort.Slice(candidates, func(i, j int) bool {
 		return candidates[i].Priority() > candidates[j].Priority()
 	})
 
-	fmt.Println(candidates)
-
 	return candidates[0].Plate, nil
 }
 
-type API struct {
-	URL string
-}
 
 func (client *API) Recognize(imageURL string) (*Response, error) {
 	URL := fmt.Sprintf("%s/v2/identify/plate?image_url=%s", client.URL, imageURL)

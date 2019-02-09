@@ -1,64 +1,61 @@
+// Package subscription implements user subscription.
 package subscription
 
-import (
-	"log"
-)
-
+// Subscription represents user subscription to car search.
 type Subscription struct {
 	Cars    []string          `json:"cars"`
 	Active  bool              `json:"active"`
 	Params  map[string]string `json:"params"`
-	quitter chan struct{}     `json:"-"`
+	quitter chan byte         `json:"-"`
 }
 
-func NewSubscription(params map[string]string) *Subscription {
-	lastIDs := make([]string, 0)
-	quitter := make(chan struct{})
-
+// New creates new clean Subscription.
+func New(params map[string]string) *Subscription {
 	return &Subscription{
-		Cars:    lastIDs,
-		quitter: quitter,
+		Cars:    make([]string, 0),
+		quitter: make(chan byte),
 		Active:  false,
 		Params:  params,
 	}
 }
 
-func (s *Subscription) Stop() {
+// Stop stops all running goroutines for current subscription.
+func (sub *Subscription) Stop() {
 	// Avoid closing closed channel.
-	if !s.Active {
+	if !sub.Active {
 		return
 	}
 
-	close(s.quitter)
-	s.quitter = make(chan struct{})
-	s.Active = false
+	close(sub.quitter)
+	sub.quitter = make(chan byte)
+	sub.Active = false
 }
 
-func (s *Subscription) Start(callback func(chan struct{})) {
-	if s.Active {
-		log.Println("Subscription is active, recreating...")
-		close(s.quitter)
-		s.quitter = make(chan struct{})
+// Start initializes a new goroutine for current subscription with specified callback.
+func (sub *Subscription) Start(callback func(chan byte)) {
+	if sub.Active {
+		close(sub.quitter)
+		sub.quitter = make(chan byte)
 	}
 
-	go func(quit chan struct{}) {
+	go func(quit chan byte) {
 		for {
 			select {
 			case <-quit:
-				log.Println("Quit was called")
 				return
 			default:
-				callback(s.quitter)
+				callback(sub.quitter)
 			}
 		}
-	}(s.quitter)
+	}(sub.quitter)
 
-	s.Active = true
+	sub.Active = true
 }
 
-func (s *Subscription) carExist(carID string) bool {
-	for _, car := range s.Cars {
-		if car == carID {
+// CarExists returns whatever car included in the list of cars for current subscription.
+func (sub *Subscription) CarExists(ID string) bool {
+	for _, carID := range sub.Cars {
+		if carID == ID {
 			return true
 		}
 	}
@@ -66,11 +63,12 @@ func (s *Subscription) carExist(carID string) bool {
 	return false
 }
 
-func (s *Subscription) GetNewCars(cars []string) []string {
+// NewCars returns list of cars, which aren't in the list yet.
+func (sub *Subscription) NewCars(cars []string) []string {
 	newCars := make([]string, 0)
 
 	for _, newCar := range cars {
-		if !s.carExist(newCar) {
+		if !sub.CarExists(newCar) {
 			newCars = append(newCars, newCar)
 		}
 	}

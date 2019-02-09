@@ -34,7 +34,7 @@ func (h AutoRiaHandler) FollowHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Messag
 		return
 	}
 
-	params, err := autoria.ParseCarSearchParams(lexemes[1])
+	params, err := autoria.ParseSearchParams(lexemes[1])
 	if err != nil {
 		Send(bot, msg.Chat, err.Error())
 		return
@@ -49,11 +49,11 @@ func (h AutoRiaHandler) FollowHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Messag
 
 	// Create subscription, if it was not created.
 	if _, ok := h.Subscriptions[msg.Chat.ID]; !ok {
-		h.Subscriptions[msg.Chat.ID] = subscription.NewSubscription(params)
+		h.Subscriptions[msg.Chat.ID] = subscription.New(params)
 	}
 
-	h.Subscriptions[msg.Chat.ID].Start(func(quitter chan struct{}) {
-		search, err := h.API.GetSearchCars(params)
+	h.Subscriptions[msg.Chat.ID].Start(func(quitter chan byte) {
+		search, err := h.API.SearchCars(params)
 
 		if err != nil {
 			Send(bot, msg.Chat, err.Error())
@@ -61,7 +61,7 @@ func (h AutoRiaHandler) FollowHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Messag
 		}
 
 		// Get list of new cars.
-		newCarIDs := h.Subscriptions[msg.Chat.ID].GetNewCars(search.Result.SearchResult.Cars)
+		newCarIDs := h.Subscriptions[msg.Chat.ID].NewCars(search.Result.SearchResult.Cars)
 		// Store latest result.
 		h.Subscriptions[msg.Chat.ID].Cars = search.Result.SearchResult.Cars
 
@@ -121,7 +121,7 @@ func (h AutoRiaHandler) CarInfoHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Messa
 
 	carID := lexemes[1]
 
-	autoRia := autoria.NewAPI(env.MustGet("RIA_API_KEY"))
+	autoRia := autoria.New(env.MustGet("RIA_API_KEY"))
 	resp, err := autoRia.CarPhotos(carID)
 
 	if err != nil {

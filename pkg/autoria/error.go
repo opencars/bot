@@ -10,7 +10,7 @@ func (err *APIError) Error() string {
 	return err.msg
 }
 
-// New creates new object of "APIError".
-func New(text string) error {
+// NewErr creates new object of "APIError".
+func NewErr(text string) error {
 	return &APIError{msg: text}
 }
