@@ -3,10 +3,10 @@ package bot
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"regexp"
 	"strings"
 
@@ -97,19 +97,18 @@ func (bot *Bot) handle(update tgbotapi.Update) {
 }
 
 // Listen
-func (bot *Bot) Listen() error {
-	host, exists := os.LookupEnv("HOST")
-	if !exists {
-		log.Panic("host is not specified")
-	}
-
-	_, err := bot.API.SetWebhook(tgbotapi.NewWebhook(host))
+func (bot *Bot) Listen(host, port string) error {
+	URL := fmt.Sprintf("%s/%s", host, bot.API.Token)
+	_, err := bot.API.SetWebhook(tgbotapi.NewWebhook(URL))
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Should be thread safe out of the box.
 	path := fmt.Sprintf("/%s", bot.API.Token)
+
+	log.Println(path)
+
 	http.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 		bytes, _ := ioutil.ReadAll(r.Body)
 		r.Body.Close()
@@ -117,13 +116,15 @@ func (bot *Bot) Listen() error {
 		update := tgbotapi.Update{}
 		json.Unmarshal(bytes, &update)
 
+		fmt.Printf("Incoming request %v\n", r)
 		// Handle "Update".
 		bot.handle(update)
 	})
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		io.WriteString(w, "Robot API")
+	})
 
-	port := env.Get("PORT", "8080")
-
-	return http.ListenAndServe(":" + port, http.DefaultServeMux)
+	return http.ListenAndServe(":"+port, http.DefaultServeMux)
 }
 
 func New(path, recognizerUrl, storageUrl string) *Bot {
