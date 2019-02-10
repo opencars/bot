@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"fmt"
+	"github.com/shal/robot/internal/bot"
 	"html/template"
 	"log"
 	"strings"
@@ -26,24 +27,30 @@ type AutoRiaHandler struct {
 }
 
 // TODO: Split this method into few methods aka delegate code.
-func (h AutoRiaHandler) FollowHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
+func (h AutoRiaHandler) FollowHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 	lexemes := strings.Split(msg.Text, " ")
 
 	if len(lexemes) < 2 || !strings.HasPrefix(lexemes[1], "https://auto.ria.com/search") {
-		Send(bot, msg.Chat, "Помилковий запит.")
+		if err := bot.Send(api, msg.Chat, "Помилковий запит."); err != nil {
+			log.Printf("send error: %s\n", err.Error())
+		}
 		return
 	}
 
 	params, err := autoria.ParseSearchParams(lexemes[1])
 	if err != nil {
-		Send(bot, msg.Chat, err.Error())
+		if err := bot.Send(api, msg.Chat, err.Error()); err != nil {
+			log.Printf("send error: %s\n", err.Error())
+		}
 		return
 	}
 
 	// Convert params to old type, because frontend and api have different types.
 	params, err = h.API.ConvertNewToOld(params)
 	if err != nil {
-		Send(bot, msg.Chat, err.Error())
+		if err := bot.Send(api, msg.Chat, err.Error()); err != nil {
+			log.Printf("send error: %s\n", err.Error())
+		}
 		return
 	}
 
@@ -56,7 +63,9 @@ func (h AutoRiaHandler) FollowHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Messag
 		search, err := h.API.SearchCars(params)
 
 		if err != nil {
-			Send(bot, msg.Chat, err.Error())
+			if err := bot.Send(api, msg.Chat, err.Error()); err != nil {
+				log.Printf("send error: %s\n", err.Error())
+			}
 			return
 		}
 
@@ -92,30 +101,37 @@ func (h AutoRiaHandler) FollowHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Messag
 
 		msg := tgbotapi.NewMessage(msg.Chat.ID, buff.String())
 		msg.DisableWebPagePreview = true
-		SendMsgHTML(msg, bot)
+
+		if err := bot.SendMsgHTML(msg, api); err != nil {
+			log.Printf("send error: %s", err.Error())
+		}
 
 		time.Sleep(time.Hour)
 	})
 
 	// TODO: Save changes to file with data.
 	// Add new subscription to data file.
-	//bot.UpdateData()
+	//api.UpdateData()
 }
 
-func (h AutoRiaHandler) StopHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
+func (h AutoRiaHandler) StopHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 	if _, ok := h.Subscriptions[msg.Chat.ID]; !ok {
-		Send(bot, msg.Chat, "Ви не підписані на оновлення.")
+		if err := bot.Send(api, msg.Chat, "Ви не підписані на оновлення."); err != nil {
+			log.Printf("send error: %s", err.Error())
+		}
 		return
 	}
 
 	h.Subscriptions[msg.Chat.ID].Stop()
 }
 
-func (h AutoRiaHandler) CarInfoHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
+func (h AutoRiaHandler) CarInfoHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 	lexemes := strings.Split(msg.Text, "_")
 
 	if len(lexemes) < 2 {
-		Send(bot, msg.Chat, "Something wrong with command argument")
+		if err := bot.Send(api, msg.Chat, "Something wrong with command argument"); err != nil {
+			log.Printf("send error: %s", err.Error())
+		}
 		return
 	}
 
@@ -125,7 +141,9 @@ func (h AutoRiaHandler) CarInfoHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Messa
 	resp, err := autoRia.CarPhotos(carID)
 
 	if err != nil {
-		Send(bot, msg.Chat, "Неправильний ідентифікатор ☹️")
+		if err := bot.Send(api, msg.Chat, "Неправильний ідентифікатор ☹️"); err != nil {
+			log.Printf("send error: %s", err.Error())
+		}
 		return
 	}
 
@@ -162,7 +180,7 @@ func (h AutoRiaHandler) CarInfoHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Messa
 				log.Println(err)
 			}
 
-			if err := SendHTML(bot, msg.Chat, buff.String()); err != nil {
+			if err := bot.SendHTML(api, msg.Chat, buff.String()); err != nil {
 				log.Printf("send error: %s\n", err.Error())
 			}
 
@@ -170,5 +188,7 @@ func (h AutoRiaHandler) CarInfoHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Messa
 		}
 	}
 
-	Send(bot, msg.Chat, "Номер не знайдено!")
+	if err := bot.Send(api, msg.Chat, "Номер не знайдено!"); err != nil {
+		log.Printf("send error: %s\n", err.Error())
+	}
 }

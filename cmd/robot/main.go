@@ -26,9 +26,11 @@ func main() {
 
 	tbot := bot.New(jsonPath, alprURL, apiURL)
 
-	tbot.HandleFunc("/start", func(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
+	tbot.HandleFunc("/start", func(api *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 		text := fmt.Sprintf("Привіт, %s!", msg.Chat.FirstName)
-		handlers.Send(bot, msg.Chat, text)
+		if err := bot.Send(api, msg.Chat, text); err != nil {
+			log.Printf("send error: %s", err.Error())
+		}
 	})
 
 	autoRiaHandler := handlers.AutoRiaHandler{

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"github.com/shal/robot/internal/bot"
 	"html/template"
 	"log"
 
@@ -13,11 +14,13 @@ type OpenCarsHandler struct {
 	OpenCars *opencars.API
 }
 
-func (h OpenCarsHandler) Handle(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
+func (h OpenCarsHandler) Handle(api *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 	transport, err := h.OpenCars.Search(msg.Text)
 
 	if err != nil {
-		Send(bot, msg.Chat, "Вибач. Щось пішло не так 😢")
+		if err := bot.Send(api, msg.Chat, "Вибач. Щось пішло не так 😢"); err != nil {
+			log.Printf("send error: %s", err.Error())
+		}
 		return
 	}
 
@@ -37,7 +40,7 @@ func (h OpenCarsHandler) Handle(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 		log.Println(err)
 	}
 
-	if err := SendHTML(bot, msg.Chat, buff.String()); err != nil {
+	if err := bot.SendHTML(api, msg.Chat, buff.String()); err != nil {
 		log.Printf("send error: %s\n", err.Error())
 	}
 }
