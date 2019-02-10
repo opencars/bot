@@ -6,7 +6,7 @@ type Subscription struct {
 	Cars    []string          `json:"cars"`
 	Active  bool              `json:"active"`
 	Params  map[string]string `json:"params"`
-	quitter chan byte         `json:"-"`
+	quitter chan byte
 }
 
 // New creates new clean Subscription.
