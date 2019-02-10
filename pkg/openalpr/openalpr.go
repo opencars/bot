@@ -72,7 +72,6 @@ func (r Response) Plate() (string, error) {
 	return candidates[0].Plate, nil
 }
 
-
 func (client *API) Recognize(imageURL string) (*Response, error) {
 	URL := fmt.Sprintf("%s/v2/identify/plate?image_url=%s", client.URL, imageURL)
 

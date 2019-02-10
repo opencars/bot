@@ -14,7 +14,7 @@ type SearchResultResponse struct {
 }
 
 type SearchResponse struct {
-	Result struct{
+	Result struct {
 		SearchResult SearchResultResponse `json:"search_result"`
 	} `json:"result"`
 }
