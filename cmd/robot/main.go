@@ -64,5 +64,5 @@ func main() {
 		log.Panic("host is not specified")
 	}
 
-	tbot.Listen(host, env.Get("PORT", "8080"))
+	log.Panic(tbot.Listen(host, env.Get("PORT", "8080")))
 }

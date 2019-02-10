@@ -24,7 +24,7 @@ type Transport struct {
 	Body                string `json:"body"`
 	Fuel                string `json:"fuel"`
 	Capacity            int    `json:"capacity"`
-	OwnWeight           int    `json:"own_weight"`
+	Weight              int    `json:"own_weight"`
 	Number              string `json:"number"`
 }
 
@@ -43,7 +43,6 @@ func (client *API) Search(number string) ([]Transport, error) {
 	}
 
 	transport := make([]Transport, 0)
-
 	if err = json.Unmarshal(body, &transport); err != nil {
 		return nil, err
 	}

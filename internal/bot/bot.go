@@ -3,7 +3,6 @@ package bot
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -114,14 +113,14 @@ func (bot *Bot) Listen(host, port string) error {
 		r.Body.Close()
 
 		update := tgbotapi.Update{}
-		json.Unmarshal(bytes, &update)
+
+		if err := json.Unmarshal(bytes, &update); err != nil {
+			log.Printf("update error: %s", err.Error())
+		}
 
 		fmt.Printf("Incoming request %v\n", r)
 		// Handle "Update".
 		bot.handle(update)
-	})
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		io.WriteString(w, "Robot API")
 	})
 
 	return http.ListenAndServe(":"+port, http.DefaultServeMux)

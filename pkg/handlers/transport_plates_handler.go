@@ -37,7 +37,7 @@ func (h OpenCarsHandler) Handle(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 		log.Println(err)
 	}
 
-	SendHTML(bot, msg.Chat, buff.String())
-
-	return
+	if err := SendHTML(bot, msg.Chat, buff.String()); err != nil {
+		log.Printf("send error: %s\n", err.Error())
+	}
 }

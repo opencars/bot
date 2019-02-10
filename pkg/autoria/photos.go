@@ -46,7 +46,10 @@ func (api *API) CarPhotos(ID string) (res *PhotosResponse, err error) {
 		}
 
 		img := new(Photo)
-		json.Unmarshal(buff, &img)
+
+		if err := json.Unmarshal(buff, &img); err != nil {
+			return nil, err
+		}
 
 		res.Photos = append(res.Photos, *img)
 	}

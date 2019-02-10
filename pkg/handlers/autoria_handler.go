@@ -162,7 +162,9 @@ func (h AutoRiaHandler) CarInfoHandler(bot *tgbotapi.BotAPI, msg *tgbotapi.Messa
 				log.Println(err)
 			}
 
-			SendHTML(bot, msg.Chat, buff.String())
+			if err := SendHTML(bot, msg.Chat, buff.String()); err != nil {
+				log.Printf("send error: %s\n", err.Error())
+			}
 
 			return
 		}
