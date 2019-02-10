@@ -15,7 +15,7 @@ notifications:
 
 before_script:
 - go mod download
-- go get github.com/golangci/golangci-lint/cmd/golangci-lint
+- GO111MODULE=off go get github.com/golangci/golangci-lint/cmd/golangci-lint
 
 script:
 - go test -v -race ./...
@@ -26,8 +26,8 @@ after_success:
 - git config --global user.name "Ali Shanaakh"
 - git config --global user.email "github@shanaakh.pro"
 - gitsem -m "[ci skip] Bump version to %s" patch
-- git remote add authenticated-origin https://shal:$GITHUB_API_KEY@github.com/${TRAVIS_REPO}
+- git remote add authenticated-origin https://$GITHUB_USER:$GITHUB_API_KEY@github.com/${TRAVIS_REPO_SLUG}
 - git push --tags authenticated-origin HEAD:$TRAVIS_BRANCH
-- echo "$DOCKER_PASSWORD" | docker login quay.io -u "$DOCKER_USERNAME" --password-stdin
-- docker build -t quay.io/shal/robot:$(git describe --abbrev=0) .
-- docker push quay.io/shal/robot:$(git describe --abbrev=0)
+- docker login quay.io -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+- docker build -t quay.io/shal/robot:$(git describe --tags --abbrev=0) .
+- docker push quay.io/shal/robot:$(git describe --tags --abbrev=0)
