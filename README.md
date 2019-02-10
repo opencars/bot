@@ -1,5 +1,6 @@
 # Robot
 
+[![Build Status](https://travis-ci.org/shal/robot.svg?branch=master)](https://travis-ci.org/shal/robot)
 [![Report](https://goreportcard.com/badge/github.com/shal/robot)](https://goreportcard.com/report/github.com/shal/robot)
 
 > :blue_car: Robot will help to find a dream vehicle
