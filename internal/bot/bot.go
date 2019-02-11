@@ -15,26 +15,22 @@ import (
 	"github.com/shal/robot/pkg/opencars"
 )
 
-// Handler ...
 type Handler interface {
 	Handle(bot *tgbotapi.BotAPI, msg *tgbotapi.Message)
 }
 
-// HandlerFunc ...
 type HandlerFunc func(*tgbotapi.BotAPI, *tgbotapi.Message)
 
-// HandlerFunc ...
 func (f HandlerFunc) Handle(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 	f(bot, msg)
 }
 
-// MuxEntry ...
 type MuxEntry struct {
 	handler Handler
 	match   func(x string) bool
 }
 
-// Bot ...
+// Bot is structure representation of Bot instance.
 type Bot struct {
 	API        *tgbotapi.BotAPI
 	Recognizer *openalpr.API
@@ -43,7 +39,7 @@ type Bot struct {
 	Mux        []MuxEntry
 }
 
-// Handle ...
+// Handle registers handler by key.
 func (bot *Bot) Handle(key string, handler Handler) {
 	bot.Mux = append(bot.Mux, MuxEntry{
 		handler: handler,
@@ -53,7 +49,7 @@ func (bot *Bot) Handle(key string, handler Handler) {
 	})
 }
 
-// HandleRegexp ...
+// HandleRegexp registers handler by regular expression.
 func (bot *Bot) HandleRegexp(regexp *regexp.Regexp, handler Handler) {
 	bot.Mux = append(bot.Mux, MuxEntry{
 		handler: handler,
@@ -63,7 +59,7 @@ func (bot *Bot) HandleRegexp(regexp *regexp.Regexp, handler Handler) {
 	})
 }
 
-// HandleFuncRegexp ...
+// HandleFuncRegexp registers handler function by regular expression.
 func (bot *Bot) HandleFuncRegexp(regexp *regexp.Regexp, handler func(*tgbotapi.BotAPI, *tgbotapi.Message)) {
 	bot.Mux = append(bot.Mux, MuxEntry{
 		handler: HandlerFunc(handler),
@@ -73,7 +69,7 @@ func (bot *Bot) HandleFuncRegexp(regexp *regexp.Regexp, handler func(*tgbotapi.B
 	})
 }
 
-// HandleFunc ...
+// HandleFunc registers handler function by key.
 func (bot *Bot) HandleFunc(key string, handler func(*tgbotapi.BotAPI, *tgbotapi.Message)) {
 	bot.Mux = append(bot.Mux, MuxEntry{
 		handler: HandlerFunc(handler),
@@ -95,7 +91,7 @@ func (bot *Bot) handle(update tgbotapi.Update) {
 	}
 }
 
-// Listen
+// Listen for telegram updates.
 func (bot *Bot) Listen(host, port string) error {
 	URL := fmt.Sprintf("%s/%s", host, bot.API.Token)
 	_, err := bot.API.SetWebhook(tgbotapi.NewWebhook(URL))
@@ -103,10 +99,8 @@ func (bot *Bot) Listen(host, port string) error {
 		log.Fatal(err)
 	}
 
-	// Should be thread safe out of the box.
+	// Should be thread-safe out of the box.
 	path := fmt.Sprintf("/%s", bot.API.Token)
-
-	log.Println(path)
 
 	http.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 		bytes, _ := ioutil.ReadAll(r.Body)
@@ -126,6 +120,8 @@ func (bot *Bot) Listen(host, port string) error {
 	return http.ListenAndServe(":"+port, http.DefaultServeMux)
 }
 
+// New creates new instanse of the Bot.
+// Idiomatically, there is only one "Bot" instance per application.
 func New(path, recognizerUrl, storageUrl string) *Bot {
 	return &Bot{
 		API:        NewAPI(),
@@ -136,6 +132,8 @@ func New(path, recognizerUrl, storageUrl string) *Bot {
 	}
 }
 
+// NewAPI creates new instance without Debug logs by default.
+// Export DEBUG=true to enable debug logs.
 func NewAPI() *tgbotapi.BotAPI {
 	bot, err := tgbotapi.NewBotAPI(env.MustGet("BOT_TOKEN"))
 

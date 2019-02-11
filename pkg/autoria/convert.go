@@ -43,8 +43,6 @@ func (api *API) convert(endpoint string, params map[string]string) (map[string]s
 			res[k] = fmt.Sprint(v)
 		}
 
-		log.Println("Number of parameters:", len(res))
-
 		return res, nil
 	}
 

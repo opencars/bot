@@ -42,20 +42,6 @@ type Response struct {
 	Results        []Result `json:"results"`
 }
 
-func (c Candidate) Priority() int {
-	priority := int(c.Confidence)
-
-	if len(c.Plate) == 8 {
-		priority += 100
-	}
-
-	if match.EuroPlates(c.Plate) {
-		priority += 100
-	}
-
-	return priority
-}
-
 func (r Response) Plate() (string, error) {
 	if len(r.Results) < 1 {
 		return "", New("plates was not recognized")
@@ -65,11 +51,19 @@ func (r Response) Plate() (string, error) {
 
 	candidates := r.Results[0].Candidates
 
+	// Sort by Confidence.
 	sort.Slice(candidates, func(i, j int) bool {
-		return candidates[i].Priority() > candidates[j].Priority()
+		return candidates[i].Confidence > candidates[j].Confidence
 	})
 
-	return candidates[0].Plate, nil
+	// Find first plates, that matches.
+	for i := range candidates {
+		if match.EuroPlates(candidates[i].Plate) {
+			return candidates[i].Plate, nil
+		}
+	}
+
+	return 	candidates[0].Plate, nil
 }
 
 func (client *API) Recognize(imageURL string) (*Response, error) {

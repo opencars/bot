@@ -116,7 +116,7 @@ func (h AutoRiaHandler) FollowHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Messag
 
 func (h AutoRiaHandler) StopHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 	if _, ok := h.Subscriptions[msg.Chat.ID]; !ok {
-		if err := bot.Send(api, msg.Chat, "Ви не підписані на оновлення."); err != nil {
+		if err := bot.Send(api, msg.Chat, "Ви не підписані на оновлення 🤔"); err != nil {
 			log.Printf("send error: %s", err.Error())
 		}
 		return
@@ -125,11 +125,13 @@ func (h AutoRiaHandler) StopHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Message)
 	h.Subscriptions[msg.Chat.ID].Stop()
 }
 
+
+
 func (h AutoRiaHandler) CarInfoHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 	lexemes := strings.Split(msg.Text, "_")
 
 	if len(lexemes) < 2 {
-		if err := bot.Send(api, msg.Chat, "Something wrong with command argument"); err != nil {
+		if err := bot.Send(api, msg.Chat, "Помилковий запит 😮"); err != nil {
 			log.Printf("send error: %s", err.Error())
 		}
 		return
@@ -141,7 +143,7 @@ func (h AutoRiaHandler) CarInfoHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Messa
 	resp, err := autoRia.CarPhotos(carID)
 
 	if err != nil {
-		if err := bot.Send(api, msg.Chat, "Неправильний ідентифікатор ☹️"); err != nil {
+		if err := bot.Send(api, msg.Chat, "Неправильний ідентифікатор 🙄️"); err != nil {
 			log.Printf("send error: %s", err.Error())
 		}
 		return
@@ -188,7 +190,7 @@ func (h AutoRiaHandler) CarInfoHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Messa
 		}
 	}
 
-	if err := bot.Send(api, msg.Chat, "Номер не знайдено!"); err != nil {
+	if err := bot.Send(api, msg.Chat, "Вибачте, номер не знайдено 😳"); err != nil {
 		log.Printf("send error: %s\n", err.Error())
 	}
 }
