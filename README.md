@@ -9,13 +9,14 @@
 
 List of supported environment variables
 
-| Env. Variable | Description              |
-|---------------|--------------------------|
-| `BOT_TOKEN`   | *Telegram API token*     |
-| `RIA_API_KEY` | *AutoRia API token*      |
-| `ALPR_URL`    | *URL to ALPR web server* |
-| `HOST`        | *Host for telegram API webhhok* |
-| `PORT`        | *Web server port* |
+| Name             | Description        |
+|------------------|--------------------|
+| `TELEGRAM_TOKEN` | Telegram API token |
+| `AUTO_RIA_TOKEN` | AutoRia API token  |
+| `HOST`           | Web server host    |
+| `PORT`           | Web server port    |
+| `RECOGNIZER_URL` | Plates recognizer  |
+| `DATA_PATH`      | Path to data file  |
 
 ## Development
 

@@ -125,8 +125,9 @@ func (h AutoRiaHandler) StopHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Message)
 	h.Subscriptions[msg.Chat.ID].Stop()
 }
 
-
-
+// TODO: Refactor this handler.
+// Analyze first 50 photos, then find best number, that matches the rules.
+// Send message firstly.
 func (h AutoRiaHandler) CarInfoHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 	lexemes := strings.Split(msg.Text, "_")
 
@@ -139,7 +140,8 @@ func (h AutoRiaHandler) CarInfoHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Messa
 
 	carID := lexemes[1]
 
-	autoRia := autoria.New(env.MustGet("RIA_API_KEY"))
+	autoRiaToken := env.MustGet("AUTO_RIA_TOKEN")
+	autoRia := autoria.New(autoRiaToken)
 	resp, err := autoRia.CarPhotos(carID)
 
 	if err != nil {
@@ -147,6 +149,12 @@ func (h AutoRiaHandler) CarInfoHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Messa
 			log.Printf("send error: %s", err.Error())
 		}
 		return
+	}
+
+	// Get user know about waiting time.
+	text := "Аналіз може зайняти до 1 хвилини 🐌"
+	if err := bot.SendHTML(api, msg.Chat, text); err != nil {
+		log.Printf("send error: %s\n", err.Error())
 	}
 
 	for _, photo := range resp.Photos {
@@ -158,36 +166,39 @@ func (h AutoRiaHandler) CarInfoHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Messa
 		}
 
 		plate, err := resp.Plate()
-		if err == nil {
-			transport, err := h.Storage.Search(plate)
 
-			fmt.Println(transport)
-
-			if err != nil {
-				log.Println(err)
-			}
-
-			tpl, err := template.ParseFiles("templates/car_info.tpl")
-			if err != nil {
-				log.Println(err)
-			}
-
-			buff := bytes.Buffer{}
-			if err := tpl.Execute(&buff, struct {
-				Cars   []opencars.Transport
-				Number string
-			}{
-				transport, plate,
-			}); err != nil {
-				log.Println(err)
-			}
-
-			if err := bot.SendHTML(api, msg.Chat, buff.String()); err != nil {
-				log.Printf("send error: %s\n", err.Error())
-			}
-
-			return
+		if err != nil {
+			continue
 		}
+
+		transport, err := h.Storage.Search(plate)
+
+		fmt.Println(transport)
+
+		if err != nil {
+			log.Println(err)
+		}
+
+		tpl, err := template.ParseFiles("templates/car_info.tpl")
+		if err != nil {
+			log.Println(err)
+		}
+
+		buff := bytes.Buffer{}
+		if err := tpl.Execute(&buff, struct {
+			Cars   []opencars.Transport
+			Number string
+		}{
+			transport, plate,
+		}); err != nil {
+			log.Println(err)
+		}
+
+		if err := bot.SendHTML(api, msg.Chat, buff.String()); err != nil {
+			log.Printf("send error: %s\n", err.Error())
+		}
+
+		return
 	}
 
 	if err := bot.Send(api, msg.Chat, "Вибачте, номер не знайдено 😳"); err != nil {
