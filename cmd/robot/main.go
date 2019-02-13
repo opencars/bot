@@ -18,14 +18,15 @@ import (
 // Looks still not very beautiful.
 // TODO: Consider refactoring "bot" library to make it's usage much cleaner.
 func main() {
-	jsonPath := env.Get("DATA_PATH", "/tmp/bot.json")
-	recognizerURL := env.MustGet("RECOGNIZER_URL")
-	openCarsURL := env.MustGet("OPEN_CARS_URL")
-	autoRiaURL := env.MustGet("AUTO_RIA_TOKEN")
+	path := env.Get("DATA_PATH", "/tmp/bot.json")
 	port := env.Get("PORT", "8080")
 	host := env.MustGet("HOST")
 
-	tbot := bot.New(jsonPath, recognizerURL, openCarsURL)
+	recognizerURL := env.MustGet("RECOGNIZER_URL")
+	openCarsURL := env.MustGet("OPEN_CARS_URL")
+	autoRiaURL := env.MustGet("AUTO_RIA_TOKEN")
+
+	tbot := bot.New(path, recognizerURL, openCarsURL)
 
 	tbot.HandleFunc("/start", func(api *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 		text := fmt.Sprintf("Привіт, %s!", msg.Chat.FirstName)
@@ -39,7 +40,7 @@ func main() {
 		Recognizer:    &openalpr.API{URL: recognizerURL},
 		Storage:       &opencars.API{URI: openCarsURL},
 		Subscriptions: make(map[int64]*subscription.Subscription),
-		FilePath:      jsonPath,
+		FilePath:      path,
 	}
 
 	openCarsHandler := handlers.OpenCarsHandler{
