@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
 	"regexp"
 
 	"github.com/go-telegram-bot-api/telegram-bot-api"
@@ -19,12 +18,14 @@ import (
 // Looks still not very beautiful.
 // TODO: Consider refactoring "bot" library to make it's usage much cleaner.
 func main() {
-	jsonPath := env.Get("BOT_DATA_PATH", "/tmp/bot.json")
-	alprURL := env.Get("ALPR_URL", "http://alpr.opencars.pp.ua")
-	apiURL := env.Get("API_URL", "http://api.opencars.pp.ua")
-	autoRiaURL := env.MustGet("RIA_API_KEY")
+	jsonPath := env.Get("DATA_PATH", "/tmp/bot.json")
+	recognizerURL := env.MustGet("RECOGNIZER_URL")
+	openCarsURL := env.MustGet("OPEN_CARS_URL")
+	autoRiaURL := env.MustGet("AUTO_RIA_TOKEN")
+	port := env.Get("PORT", "8080")
+	host := env.MustGet("HOST")
 
-	tbot := bot.New(jsonPath, alprURL, apiURL)
+	tbot := bot.New(jsonPath, recognizerURL, openCarsURL)
 
 	tbot.HandleFunc("/start", func(api *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 		text := fmt.Sprintf("Привіт, %s!", msg.Chat.FirstName)
@@ -35,14 +36,14 @@ func main() {
 
 	autoRiaHandler := handlers.AutoRiaHandler{
 		API:           autoria.New(autoRiaURL),
-		Recognizer:    &openalpr.API{URL: alprURL},
-		Storage:       &opencars.API{URI: apiURL},
+		Recognizer:    &openalpr.API{URL: recognizerURL},
+		Storage:       &opencars.API{URI: openCarsURL},
 		Subscriptions: make(map[int64]*subscription.Subscription),
 		FilePath:      jsonPath,
 	}
 
 	openCarsHandler := handlers.OpenCarsHandler{
-		OpenCars: &opencars.API{URI: apiURL},
+		OpenCars: &opencars.API{URI: openCarsURL},
 	}
 
 	tbot.HandleFunc("/follow", autoRiaHandler.FollowHandler)
@@ -60,11 +61,5 @@ func main() {
 	}
 	tbot.HandleFuncRegexp(expr, autoRiaHandler.CarInfoHandler)
 
-	// Host is required.
-	host, exists := os.LookupEnv("HOST")
-	if !exists {
-		log.Panic("host is not specified")
-	}
-
-	log.Panic(tbot.Listen(host, env.Get("PORT", "8080")))
+	log.Panic(tbot.Listen(host, port))
 }

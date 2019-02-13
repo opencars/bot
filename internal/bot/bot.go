@@ -135,8 +135,10 @@ func New(path, recognizerUrl, storageUrl string) *Bot {
 // NewAPI creates new instance without Debug logs by default.
 // Export DEBUG=true to enable debug logs.
 func NewAPI() *tgbotapi.BotAPI {
-	bot, err := tgbotapi.NewBotAPI(env.MustGet("BOT_TOKEN"))
+	telegramToken := env.MustGet("TELEGRAM_TOKEN")
+	bot, err := tgbotapi.NewBotAPI(telegramToken)
 
+	//bot.
 	bot.Debug = env.Get("LOG_LEVEL", "DEBUG") == "DEBUG"
 
 	if err != nil {
