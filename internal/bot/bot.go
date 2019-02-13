@@ -93,14 +93,14 @@ func (bot *Bot) handle(update tgbotapi.Update) {
 
 // Listen for telegram updates.
 func (bot *Bot) Listen(host, port string) error {
-	URL := fmt.Sprintf("%s/%s", host, bot.API.Token)
+	URL := fmt.Sprintf("%s/tg/%s", host, bot.API.Token)
 	_, err := bot.API.SetWebhook(tgbotapi.NewWebhook(URL))
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Should be thread-safe out of the box.
-	path := fmt.Sprintf("/%s", bot.API.Token)
+	path := fmt.Sprintf("/tg/%s", bot.API.Token)
 
 	http.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 		bytes, _ := ioutil.ReadAll(r.Body)
@@ -158,13 +158,13 @@ func send(bot *tgbotapi.BotAPI, message tgbotapi.MessageConfig) error {
 	return nil
 }
 
-// SendHTML send message to the chat with regular text.
+// Send sends message to the chat with regular text.
 func Send(bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, text string) error {
 	msg := tgbotapi.NewMessage(chat.ID, text)
 	return send(bot, msg)
 }
 
-// SendHTML send message to the chat with text formatted as HTML.
+// SendHTML sends message to the chat with text formatted as HTML.
 func SendHTML(bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, text string) error {
 	msg := tgbotapi.NewMessage(chat.ID, text)
 	msg.ParseMode = tgbotapi.ModeHTML
@@ -172,14 +172,14 @@ func SendHTML(bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, text string) error {
 	return send(bot, msg)
 }
 
-// SendHTML send message to the chat with text formatted as HTML.
+// SendMsgHTML sends message to the chat with text formatted as HTML.
 func SendMsgHTML(msg tgbotapi.MessageConfig, bot *tgbotapi.BotAPI) error {
 	msg.ParseMode = tgbotapi.ModeHTML
 
 	return send(bot, msg)
 }
 
-// SendMarkdown send message to the chat with text formatted as Markdown.
+// SendMarkdown sends message to the chat with text formatted as Markdown.
 func SendMarkdown(bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, text string) error {
 	msg := tgbotapi.NewMessage(chat.ID, text)
 	msg.ParseMode = tgbotapi.ModeMarkdown

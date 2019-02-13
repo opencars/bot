@@ -6,14 +6,14 @@ type Subscription struct {
 	Cars    []string          `json:"cars"`
 	Active  bool              `json:"active"`
 	Params  map[string]string `json:"params"`
-	quitter chan byte
+	quitter chan struct{}
 }
 
 // New creates new clean Subscription.
 func New(params map[string]string) *Subscription {
 	return &Subscription{
 		Cars:    make([]string, 0),
-		quitter: make(chan byte),
+		quitter: make(chan struct{}),
 		Active:  false,
 		Params:  params,
 	}
@@ -27,18 +27,18 @@ func (sub *Subscription) Stop() {
 	}
 
 	close(sub.quitter)
-	sub.quitter = make(chan byte)
+	sub.quitter = make(chan struct{})
 	sub.Active = false
 }
 
 // Start initializes a new goroutine for current subscription with specified callback.
-func (sub *Subscription) Start(callback func(chan byte)) {
+func (sub *Subscription) Start(callback func(chan struct{})) {
 	if sub.Active {
 		close(sub.quitter)
-		sub.quitter = make(chan byte)
+		sub.quitter = make(chan struct{})
 	}
 
-	go func(quit chan byte) {
+	go func(quit chan struct{}) {
 		for {
 			select {
 			case <-quit:

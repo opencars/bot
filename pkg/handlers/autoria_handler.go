@@ -59,7 +59,7 @@ func (h AutoRiaHandler) FollowHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Messag
 		h.Subscriptions[msg.Chat.ID] = subscription.New(params)
 	}
 
-	h.Subscriptions[msg.Chat.ID].Start(func(quitter chan byte) {
+	h.Subscriptions[msg.Chat.ID].Start(func(quitter chan struct{}) {
 		search, err := h.API.SearchCars(params)
 
 		if err != nil {
