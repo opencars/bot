@@ -3,7 +3,7 @@ package openalpr
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/shal/robot/pkg/match"
+	"github.com/shal/opencars-bot/pkg/match"
 	"io/ioutil"
 	"net/http"
 	"sort"
@@ -63,7 +63,7 @@ func (r Response) Plate() (string, error) {
 		}
 	}
 
-	return 	candidates[0].Plate, nil
+	return candidates[0].Plate, nil
 }
 
 func (client *API) Recognize(imageURL string) (*Response, error) {

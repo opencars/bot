@@ -1,4 +1,4 @@
-module github.com/shal/robot
+module github.com/shal/opencars-bot
 
 require (
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible

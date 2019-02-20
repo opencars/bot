@@ -6,7 +6,7 @@ jobs:
       - image: circleci/golang:1.11
         environment:
           GO111MODULE: "on"
-    working_directory: /go/src/github.com/shal/robot
+    working_directory: /go/src/github.com/shal/opencars-bot
     steps:
       - checkout
 
@@ -36,7 +36,7 @@ jobs:
 
       - run:
           name: Build Project Binary
-          command: "go build cmd/robot/main.go"
+          command: "go build cmd/bot/main.go"
   release:
     docker:
       - image: circleci/golang:1.11
@@ -63,7 +63,7 @@ jobs:
           name: "Release Version"
           command: |
             git remote add authenticated-origin https://${GITHUB_USER}:${GITHUB_API_KEY}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
-            git push origin HEAD:${CIRCLE_BRANCH}
+            git push --tags authenticated-origin HEAD:${CIRCLE_BRANCH}
   build:
     machine: true
     steps:
@@ -97,9 +97,7 @@ workflows:
           filters:
             branches:
               only: master
-      - build:
-          requires:
-            - test
-          filters:
-            tags:
-              only: /^v.*/
+      # - build:
+      #     filters:
+      #       tags:
+      #         only: /^v.*/

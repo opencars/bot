@@ -2,12 +2,12 @@ package handlers
 
 import (
 	"bytes"
-	"github.com/shal/robot/internal/bot"
+	"github.com/shal/opencars-bot/internal/bot"
 	"html/template"
 	"log"
 
 	"github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/shal/robot/pkg/opencars"
+	"github.com/shal/opencars-bot/pkg/opencars"
 )
 
 type OpenCarsHandler struct {

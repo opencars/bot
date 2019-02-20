@@ -10,9 +10,9 @@ import (
 	"strings"
 
 	"github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/shal/robot/pkg/env"
-	"github.com/shal/robot/pkg/openalpr"
-	"github.com/shal/robot/pkg/opencars"
+	"github.com/shal/opencars-bot/pkg/env"
+	"github.com/shal/opencars-bot/pkg/openalpr"
+	"github.com/shal/opencars-bot/pkg/opencars"
 )
 
 type Handler interface {

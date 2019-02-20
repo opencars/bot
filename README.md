@@ -1,8 +1,8 @@
-# Robot
+# OpenCars Bot
 
-[![Report](https://goreportcard.com/badge/github.com/shal/robot)](https://goreportcard.com/report/github.com/shal/robot)
+[![Report](https://goreportcard.com/badge/github.com/shal/opencars-bot)](https://goreportcard.com/report/github.com/shal/opencars-bot)
 
-> :blue_car: Robot will help to find a dream vehicle
+> :blue_car: OpenCars Bot will help to find a dream vehicle
 
 ## Overview
 
@@ -10,10 +10,10 @@ List of supported environment variables
 
 | Name             | Description        |
 |------------------|--------------------|
-| `TELEGRAM_TOKEN` | Telegram API token |
-| `AUTO_RIA_TOKEN` | AutoRia API token  |
 | `HOST`           | Web server host    |
 | `PORT`           | Web server port    |
+| `TELEGRAM_TOKEN` | Telegram API token |
+| `AUTO_RIA_TOKEN` | AutoRia API token  |
 | `RECOGNIZER_URL` | Plates recognizer  |
 | `DATA_PATH`      | Path to data file  |
 
@@ -34,10 +34,10 @@ Export ngrok host
 $ export HOST=<host>
 ```
 
-You can run bot with command below
+You can run the bot with command below
 
 ```sh
-$ PORT=80 go run cmd/robot/main.go
+$ PORT=80 go run cmd/bot/main.go
 ```
 
 ## License

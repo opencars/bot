@@ -6,19 +6,27 @@ import (
 	"regexp"
 
 	"github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/shal/robot/internal/bot"
-	"github.com/shal/robot/internal/subscription"
-	"github.com/shal/robot/pkg/autoria"
-	"github.com/shal/robot/pkg/env"
-	"github.com/shal/robot/pkg/handlers"
-	"github.com/shal/robot/pkg/openalpr"
-	"github.com/shal/robot/pkg/opencars"
+	"github.com/shal/opencars-bot/internal/bot"
+	"github.com/shal/opencars-bot/internal/subscription"
+	"github.com/shal/opencars-bot/pkg/autoria"
+	"github.com/shal/opencars-bot/pkg/env"
+	"github.com/shal/opencars-bot/pkg/handlers"
+	"github.com/shal/opencars-bot/pkg/openalpr"
+	"github.com/shal/opencars-bot/pkg/opencars"
 )
+
+func StartHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Message) {
+	text := fmt.Sprintf("Привіт, %s!", msg.Chat.FirstName)
+
+	if err := bot.Send(api, msg.Chat, text); err != nil {
+		log.Printf("send error: %s", err.Error())
+	}
+}
 
 // Looks still not very beautiful.
 // TODO: Consider refactoring "bot" library to make it's usage much cleaner.
 func main() {
-	path := env.Get("DATA_PATH", "/tmp/bot.json")
+	path := env.Get("DATA_PATH", "/etc/bot.json")
 	port := env.Get("PORT", "8080")
 	host := env.MustGet("HOST")
 
@@ -28,12 +36,7 @@ func main() {
 
 	tbot := bot.New(path, recognizerURL, openCarsURL)
 
-	tbot.HandleFunc("/start", func(api *tgbotapi.BotAPI, msg *tgbotapi.Message) {
-		text := fmt.Sprintf("Привіт, %s!", msg.Chat.FirstName)
-		if err := bot.Send(api, msg.Chat, text); err != nil {
-			log.Printf("send error: %s", err.Error())
-		}
-	})
+	tbot.HandleFunc("/start", StartHandler)
 
 	autoRiaHandler := handlers.AutoRiaHandler{
 		API:           autoria.New(autoRiaURL),
@@ -62,5 +65,7 @@ func main() {
 	}
 	tbot.HandleFuncRegexp(expr, autoRiaHandler.CarInfoHandler)
 
-	log.Panic(tbot.Listen(host, port))
+	if err := tbot.Listen(host, port); err != nil {
+		log.Panic(err)
+	}
 }
