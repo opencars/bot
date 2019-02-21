@@ -77,7 +77,7 @@ jobs:
       - run:
           name: "Build Docker Image"
           command: |
-            docker build -t quay.io/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}:${CIRCLE_TAG}
+            docker build -t quay.io/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}:${CIRCLE_TAG} .
             docker build -t quay.io/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME} .
 
       - run:
@@ -97,7 +97,9 @@ workflows:
           filters:
             branches:
               only: master
-      # - build:
-      #     filters:
-      #       tags:
-      #         only: /^v.*/
+      - build:
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
