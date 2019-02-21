@@ -21,7 +21,7 @@ RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
 
 WORKDIR /app
 
-COPY --from=build /go/bin/opencars-bot ./opencars-bot
+COPY --from=build /go/bin/bot ./bot
 COPY templates/ templates/
 
 ENTRYPOINT ["./bot"]

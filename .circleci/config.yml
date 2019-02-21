@@ -77,14 +77,14 @@ jobs:
       - run:
           name: "Build Docker Image"
           command: |
-            docker build -t quay.io/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}:${CIRCLE_TAG} .
-            docker build -t quay.io/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME} .
+            docker build -t quay.io/opencars/bot:${CIRCLE_TAG} .
+            docker build -t quay.io/opencars/bot .
 
       - run:
           name: "Push Docker Image"
           command: |
-            docker push quay.io/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}:${CIRCLE_TAG}
-            docker push quay.io/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+            docker push quay.io/opencars/bot:${CIRCLE_TAG}
+            docker push quay.io/opencars/bot
 
 workflows:
   version: 2
