@@ -1,0 +1,68 @@
+  {
+    "img_height": 600,
+    "img_width": 800,
+    "processing_time_ms": 1.0,
+    "results": [
+      {
+        "candidates": [
+          {
+            "confidence": 95.0,
+            "plate": "BH4316IH"
+          },
+          {
+            "confidence": 90.0,
+            "plate": "BH436IH"
+          },
+          {
+            "confidence": 80.0,
+            "plate": "8H4316IH"
+          },
+          {
+            "confidence": 70.0,
+            "plate": "5H4316IH"
+          },
+          {
+            "confidence": 60.0,
+            "plate": "H4316IH"
+          },
+          {
+            "confidence": 50.0,
+            "plate": "8H436IH"
+          },
+          {
+            "confidence": 40.0,
+            "plate": "5H436IH"
+          },
+          {
+            "confidence": 30.0,
+            "plate": "H436IH"
+          }
+        ],
+        "confidence": 95.0,
+        "coordinates": [
+          {
+            "x": 307,
+            "y": 480
+          },
+          {
+            "x": 533,
+            "y": 480
+          },
+          {
+            "x": 532,
+            "y": 525
+          },
+          {
+            "x": 307,
+            "y": 525
+          }
+        ],
+        "plate": "BH4316IH",
+        "plate_index": 0,
+        "processing_time_ms": 1.0,
+        "region": "",
+        "region_confidence": 0,
+        "requested_topn": 20
+      }
+    ]
+  }

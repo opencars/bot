@@ -40,7 +40,7 @@ func main() {
 
 	autoRiaHandler := handlers.AutoRiaHandler{
 		API:           autoria.New(autoRiaURL),
-		Recognizer:    &openalpr.API{URL: recognizerURL},
+		Recognizer:    &openalpr.API{URI: recognizerURL},
 		Storage:       &opencars.API{URI: openCarsURL},
 		Subscriptions: make(map[int64]*subscription.Subscription),
 		FilePath:      path,

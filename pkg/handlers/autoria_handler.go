@@ -159,29 +159,26 @@ func (h AutoRiaHandler) CarInfoHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Messa
 
 	for _, photo := range resp.Photos {
 		resp, err := h.Recognizer.Recognize(photo.URL())
-
 		if err != nil {
 			log.Println(err)
 			continue
 		}
 
 		plate, err := resp.Plate()
-
 		if err != nil {
 			continue
 		}
 
 		transport, err := h.Storage.Search(plate)
-
-		fmt.Println(transport)
-
 		if err != nil {
 			log.Println(err)
+			return
 		}
 
 		tpl, err := template.ParseFiles("templates/car_info.tpl")
 		if err != nil {
 			log.Println(err)
+			return
 		}
 
 		buff := bytes.Buffer{}
@@ -192,6 +189,7 @@ func (h AutoRiaHandler) CarInfoHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Messa
 			transport, plate,
 		}); err != nil {
 			log.Println(err)
+			return
 		}
 
 		if err := bot.SendHTML(api, msg.Chat, buff.String()); err != nil {

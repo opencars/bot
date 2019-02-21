@@ -125,7 +125,7 @@ func (bot *Bot) Listen(host, port string) error {
 func New(path, recognizerUrl, storageUrl string) *Bot {
 	return &Bot{
 		API:        NewAPI(),
-		Recognizer: &openalpr.API{URL: recognizerUrl},
+		Recognizer: &openalpr.API{URI: recognizerUrl},
 		Storage:    &opencars.API{URI: storageUrl},
 		Mux:        make([]MuxEntry, 0),
 		FilePath:   path,
