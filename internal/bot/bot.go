@@ -15,6 +15,11 @@ import (
 	"github.com/shal/opencars-bot/pkg/opencars"
 )
 
+// Constant values for ChatActions.
+const (
+	ChatTyping = "typing"
+)
+
 type Handler interface {
 	Handle(bot *tgbotapi.BotAPI, msg *tgbotapi.Message)
 }
@@ -162,6 +167,15 @@ func send(bot *tgbotapi.BotAPI, message tgbotapi.MessageConfig) error {
 func Send(bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, text string) error {
 	msg := tgbotapi.NewMessage(chat.ID, text)
 	return send(bot, msg)
+}
+
+func SendAction(bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, status string) error {
+	action := tgbotapi.NewChatAction(chat.ID, status)
+	if _, err := bot.Send(action); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // SendHTML sends message to the chat with text formatted as HTML.

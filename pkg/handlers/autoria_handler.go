@@ -28,8 +28,11 @@ type AutoRiaHandler struct {
 
 // TODO: Split this method into few methods aka delegate code.
 func (h AutoRiaHandler) FollowHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Message) {
-	lexemes := strings.Split(msg.Text, " ")
+	if err := bot.SendAction(api, msg.Chat, bot.ChatTyping); err != nil {
+		log.Printf("action error: %s", err.Error())
+	}
 
+	lexemes := strings.Split(msg.Text, " ")
 	if len(lexemes) < 2 || !strings.HasPrefix(lexemes[1], "https://auto.ria.com/search") {
 		if err := bot.Send(api, msg.Chat, "Помилковий запит."); err != nil {
 			log.Printf("send error: %s\n", err.Error())
@@ -115,6 +118,10 @@ func (h AutoRiaHandler) FollowHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Messag
 }
 
 func (h AutoRiaHandler) StopHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Message) {
+	if err := bot.SendAction(api, msg.Chat, bot.ChatTyping); err != nil {
+		log.Printf("action error: %s", err.Error())
+	}
+
 	if _, ok := h.Subscriptions[msg.Chat.ID]; !ok {
 		if err := bot.Send(api, msg.Chat, "Ви не підписані на оновлення 🤔"); err != nil {
 			log.Printf("send error: %s", err.Error())

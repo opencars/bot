@@ -15,6 +15,10 @@ type OpenCarsHandler struct {
 }
 
 func (h OpenCarsHandler) Handle(api *tgbotapi.BotAPI, msg *tgbotapi.Message) {
+	if err := bot.SendAction(api, msg.Chat, bot.ChatTyping); err != nil {
+		log.Printf("action error: %s", err.Error())
+	}
+
 	transport, err := h.OpenCars.Search(msg.Text)
 
 	if err != nil {
