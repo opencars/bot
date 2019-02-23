@@ -20,14 +20,40 @@ const (
 	ChatTyping = "typing"
 )
 
-type Handler interface {
-	Handle(bot *tgbotapi.BotAPI, msg *tgbotapi.Message)
+const (
+	PhotoEvent   = "/photo"
+	StickerEvent = "/sticker"
+)
+
+var (
+	WebPagePreview = true
+)
+
+type Message struct {
+	API *tgbotapi.BotAPI
+	msg *tgbotapi.Message
 }
 
-type HandlerFunc func(*tgbotapi.BotAPI, *tgbotapi.Message)
+func (msg *Message) Chat() *tgbotapi.Chat {
+	return msg.msg.Chat
+}
 
-func (f HandlerFunc) Handle(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
-	f(bot, msg)
+func (msg *Message) Text() string {
+	return msg.msg.Text
+}
+
+func (msg *Message) Photo() *[]tgbotapi.PhotoSize {
+	return msg.msg.Photo
+}
+
+type Handler interface {
+	Handle(msg *Message)
+}
+
+type HandlerFunc func(msg *Message)
+
+func (f HandlerFunc) Handle(msg *Message) {
+	f(msg)
 }
 
 type MuxEntry struct {
@@ -65,7 +91,7 @@ func (bot *Bot) HandleRegexp(regexp *regexp.Regexp, handler Handler) {
 }
 
 // HandleFuncRegexp registers handler function by regular expression.
-func (bot *Bot) HandleFuncRegexp(regexp *regexp.Regexp, handler func(*tgbotapi.BotAPI, *tgbotapi.Message)) {
+func (bot *Bot) HandleFuncRegexp(regexp *regexp.Regexp, handler func(*Message)) {
 	bot.Mux = append(bot.Mux, MuxEntry{
 		handler: HandlerFunc(handler),
 		match: func(x string) bool {
@@ -75,7 +101,7 @@ func (bot *Bot) HandleFuncRegexp(regexp *regexp.Regexp, handler func(*tgbotapi.B
 }
 
 // HandleFunc registers handler function by key.
-func (bot *Bot) HandleFunc(key string, handler func(*tgbotapi.BotAPI, *tgbotapi.Message)) {
+func (bot *Bot) HandleFunc(key string, handler func(*Message)) {
 	bot.Mux = append(bot.Mux, MuxEntry{
 		handler: HandlerFunc(handler),
 		match: func(text string) bool {
@@ -84,15 +110,34 @@ func (bot *Bot) HandleFunc(key string, handler func(*tgbotapi.BotAPI, *tgbotapi.
 	})
 }
 
-func (bot *Bot) handle(update tgbotapi.Update) {
+func (bot *Bot) handleMsg(request *tgbotapi.Message) {
+	msg := &Message{bot.API, request}
+
 	for _, entry := range bot.Mux {
-		if update.Message == nil {
-			break
+		if entry.match(PhotoEvent) {
+			if request.Photo != nil {
+				entry.handler.Handle(msg)
+			}
+			return
 		}
 
-		if entry.match(update.Message.Text) {
-			entry.handler.Handle(bot.API, update.Message)
+		if entry.match(StickerEvent) {
+			if request.Sticker != nil {
+				entry.handler.Handle(msg)
+			}
+			return
 		}
+
+		if entry.match(request.Text) {
+			entry.handler.Handle(msg)
+			return
+		}
+	}
+}
+
+func (bot *Bot) handle(update tgbotapi.Update) {
+	if update.Message != nil {
+		bot.handleMsg(update.Message)
 	}
 }
 
@@ -117,7 +162,7 @@ func (bot *Bot) Listen(host, port string) error {
 			log.Printf("update error: %s", err.Error())
 		}
 
-		fmt.Printf("Incoming request %v\n", r)
+		//fmt.Printf("Incoming request %v\n", r)
 		// Handle "Update".
 		bot.handle(update)
 	})
@@ -125,7 +170,7 @@ func (bot *Bot) Listen(host, port string) error {
 	return http.ListenAndServe(":"+port, http.DefaultServeMux)
 }
 
-// New creates new instanse of the Bot.
+// New creates new instance of the Bot.
 // Idiomatically, there is only one "Bot" instance per application.
 func New(path, recognizerUrl, storageUrl string) *Bot {
 	return &Bot{
@@ -142,36 +187,33 @@ func New(path, recognizerUrl, storageUrl string) *Bot {
 func NewAPI() *tgbotapi.BotAPI {
 	telegramToken := env.MustFetch("TELEGRAM_TOKEN")
 	bot, err := tgbotapi.NewBotAPI(telegramToken)
-
-	//bot.
-	bot.Debug = env.Fetch("LOG_LEVEL", "DEBUG") == "DEBUG"
-
 	if err != nil {
 		panic(err)
 	}
 
+	//bot.Debug = env.Fetch("LOG_LEVEL", "DEBUG") == "DEBUG"
+	bot.Debug = false
 	log.Printf("API authorized %s\n", bot.Self.UserName)
 
 	return bot
 }
 
-func send(bot *tgbotapi.BotAPI, message tgbotapi.MessageConfig) error {
-	if _, err := bot.Send(message); err != nil {
+func (msg *Message) send(message tgbotapi.MessageConfig) error {
+	message.DisableWebPagePreview = !WebPagePreview
+	if _, err := msg.API.Send(message); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// Send sends message to the chat with regular text.
-func Send(bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, text string) error {
-	msg := tgbotapi.NewMessage(chat.ID, text)
-	return send(bot, msg)
+func (msg *Message) Send(text string) error {
+	return msg.send(tgbotapi.NewMessage(msg.msg.Chat.ID, text))
 }
 
-func SendAction(bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, status string) error {
-	action := tgbotapi.NewChatAction(chat.ID, status)
-	if _, err := bot.Send(action); err != nil {
+func (msg *Message) SetStatus(status string) error {
+	action := tgbotapi.NewChatAction(msg.msg.Chat.ID, status)
+	if _, err := msg.API.Send(action); err != nil {
 		return err
 	}
 
@@ -179,24 +221,9 @@ func SendAction(bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, status string) error 
 }
 
 // SendHTML sends message to the chat with text formatted as HTML.
-func SendHTML(bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, text string) error {
-	msg := tgbotapi.NewMessage(chat.ID, text)
-	msg.ParseMode = tgbotapi.ModeHTML
+func (msg *Message) SendHTML(text string) error {
+	res := tgbotapi.NewMessage(msg.msg.Chat.ID, text)
+	res.ParseMode = tgbotapi.ModeHTML
 
-	return send(bot, msg)
-}
-
-// SendMsgHTML sends message to the chat with text formatted as HTML.
-func SendMsgHTML(msg tgbotapi.MessageConfig, bot *tgbotapi.BotAPI) error {
-	msg.ParseMode = tgbotapi.ModeHTML
-
-	return send(bot, msg)
-}
-
-// SendMarkdown sends message to the chat with text formatted as Markdown.
-func SendMarkdown(bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, text string) error {
-	msg := tgbotapi.NewMessage(chat.ID, text)
-	msg.ParseMode = tgbotapi.ModeMarkdown
-
-	return send(bot, msg)
+	return msg.send(res)
 }

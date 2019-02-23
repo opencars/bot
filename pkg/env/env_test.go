@@ -26,9 +26,3 @@ func TestFetch(t *testing.T) {
 		assert.Equal(t, "test", res)
 	})
 }
-
-//func TestMustFetch2(t *testing.T) {
-//	expected := "environment variable INVALID_ENV does not set"
-//	assert.PanicsWithValue(t, expected, func() {
-//		Must(Fetch("INVALID_ENV"))
-//	})

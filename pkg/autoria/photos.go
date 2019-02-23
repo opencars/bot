@@ -2,7 +2,6 @@ package autoria
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 )
 
@@ -28,7 +27,7 @@ func (photo Photo) URL() string {
 }
 
 func (api *API) CarPhotos(ID string) (res *PhotosResponse, err error) {
-	resp, err := http.Get(api.BuildURL("auto/fotos/" + ID))
+	resp, err := http.Get(api.buildURL("auto/fotos/"+ID, nil))
 	if err != nil {
 		return nil, err
 	}
@@ -38,8 +37,7 @@ func (api *API) CarPhotos(ID string) (res *PhotosResponse, err error) {
 		return nil, err
 	}
 
-	for k, v := range res.Data[ID].(map[string]interface{}) {
-		fmt.Printf("%v\n", k)
+	for _, v := range res.Data[ID].(map[string]interface{}) {
 		buff, err := json.Marshal(v)
 		if err != nil {
 			return nil, err

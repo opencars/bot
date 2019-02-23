@@ -5,7 +5,6 @@ import (
 	"log"
 	"regexp"
 
-	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/shal/opencars-bot/internal/bot"
 	"github.com/shal/opencars-bot/internal/subscription"
 	"github.com/shal/opencars-bot/pkg/autoria"
@@ -15,14 +14,13 @@ import (
 	"github.com/shal/opencars-bot/pkg/opencars"
 )
 
-func StartHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Message) {
-	if err := bot.SendAction(api, msg.Chat, bot.ChatTyping); err != nil {
+func StartHandler(msg *bot.Message) {
+	if err := msg.SetStatus(bot.ChatTyping); err != nil {
 		log.Printf("action error: %s", err.Error())
 	}
 
-	text := fmt.Sprintf("Привіт, %s!", msg.Chat.FirstName)
-
-	if err := bot.Send(api, msg.Chat, text); err != nil {
+	text := fmt.Sprintf("Привіт, %s!", msg.Chat().FirstName)
+	if err := msg.Send(text); err != nil {
 		log.Printf("send error: %s", err.Error())
 	}
 }
@@ -36,14 +34,14 @@ func main() {
 
 	recognizerURL := env.MustFetch("RECOGNIZER_URL")
 	openCarsURL := env.MustFetch("OPEN_CARS_URL")
-	autoRiaURL := env.MustFetch("AUTO_RIA_TOKEN")
+	autoRiaToken := env.MustFetch("AUTO_RIA_TOKEN")
 
 	tbot := bot.New(path, recognizerURL, openCarsURL)
 
 	tbot.HandleFunc("/start", StartHandler)
 
 	autoRiaHandler := handlers.AutoRiaHandler{
-		API:           autoria.New(autoRiaURL),
+		API:           autoria.New(autoRiaToken),
 		Recognizer:    &openalpr.API{URI: recognizerURL},
 		Storage:       &opencars.API{URI: openCarsURL},
 		Subscriptions: make(map[int64]*subscription.Subscription),
@@ -51,7 +49,8 @@ func main() {
 	}
 
 	openCarsHandler := handlers.OpenCarsHandler{
-		OpenCars: &opencars.API{URI: openCarsURL},
+		OpenCars:   &opencars.API{URI: openCarsURL},
+		Recognizer: &openalpr.API{URI: recognizerURL},
 	}
 
 	tbot.HandleFunc("/follow", autoRiaHandler.FollowHandler)
@@ -61,13 +60,16 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
-	tbot.HandleRegexp(expr, openCarsHandler)
+
+	tbot.HandleFuncRegexp(expr, openCarsHandler.PlatesHandler)
 
 	expr, err = regexp.Compile(`^/auto_\d+$`)
 	if err != nil {
 		log.Panic(err)
 	}
+
 	tbot.HandleFuncRegexp(expr, autoRiaHandler.CarInfoHandler)
+	tbot.HandleFunc(bot.PhotoEvent, openCarsHandler.PhotoHandler)
 
 	if err := tbot.Listen(host, port); err != nil {
 		log.Panic(err)
