@@ -19,28 +19,33 @@ func New(URI string) *API {
 	return &API{URI: URI}
 }
 
-func (r *Image) Plate() (string, error) {
+func (r *Image) Plates() ([]string, error) {
 	if len(r.Recognized) < 1 {
-		return "", errors.New("no plates found")
-	} else if len(r.Recognized) > 1 {
-		return "", errors.New("too many plates on the image")
+		return nil, errors.New("no plates found")
 	}
 
-	candidates := r.Recognized[0].Candidates
+	plates := make([]string, 0)
+	for _, recognized := range r.Recognized {
+		candidates := recognized.Candidates
 
-	// Sort by Confidence.
-	sort.Slice(candidates, func(i, j int) bool {
-		return candidates[i].Confidence > candidates[j].Confidence
-	})
+		// Sort by confidence.
+		sort.Slice(candidates, func(i, j int) bool {
+			return candidates[i].Confidence > candidates[j].Confidence
+		})
 
-	// Find first plates, that matches.
-	for i := range candidates {
-		if match.EuroPlates(candidates[i].Plate) {
-			return candidates[i].Plate, nil
+		// Find first plates, that matches.
+		plate := candidates[0].Plate
+		for _, candidate := range candidates {
+			if match.EuroPlates(candidate.Plate) {
+				plate = candidate.Plate
+				break
+			}
 		}
+
+		plates = append(plates, plate)
 	}
 
-	return candidates[0].Plate, nil
+	return plates, nil
 }
 
 func (api *API) Recognize(uri string) (*Image, error) {
@@ -54,11 +59,12 @@ func (api *API) Recognize(uri string) (*Image, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
-	img := new(Image)
-	if err := json.NewDecoder(resp.Body).Decode(img); err != nil {
+	img := Image{}
+	if err := json.NewDecoder(resp.Body).Decode(&img); err != nil {
 		return nil, errors.New("invalid response body")
 	}
 
-	return img, nil
+	return &img, nil
 }

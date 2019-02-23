@@ -37,7 +37,7 @@ $ export HOST=<host>
 You can run the bot with command below
 
 ```sh
-$ PORT=80 go run cmd/bot/main.go
+$ PORT=80 go run cmd/bot/bot.go
 ```
 
 ## License

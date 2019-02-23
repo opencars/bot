@@ -60,21 +60,21 @@ func TestResponse_Plate(t *testing.T) {
 	assert.NoError(t, err)
 
 	t.Run("nothing found", func(t *testing.T) {
-		plate, err := new(Image).Plate()
+		plates, err := new(Image).Plates()
 
-		assert.Empty(t, plate)
+		assert.Empty(t, plates)
 		assert.EqualError(t, err, "no plates found")
 	})
 
-	t.Run("too many plates found", func(t *testing.T) {
+	t.Run("few plates found", func(t *testing.T) {
 		img := Image{}
 
 		assert.NoError(t, json.Unmarshal(content, &img))
 		img.Recognized = append(img.Recognized, img.Recognized[0])
-		plate, err := img.Plate()
+		plates, err := img.Plates()
 
-		assert.Empty(t, plate)
-		assert.EqualError(t, err, "too many plates on the image")
+		assert.Equal(t, 2, len(plates))
+		assert.NoError(t, err)
 	})
 
 	t.Run("not valid plates found", func(t *testing.T) {
@@ -82,9 +82,9 @@ func TestResponse_Plate(t *testing.T) {
 
 		assert.NoError(t, json.Unmarshal(content, &img))
 		img.Recognized[0].Candidates[0].Plate = "INVALID"
-		plate, err := img.Plate()
+		plates, err := img.Plates()
 
-		assert.Equal(t, "INVALID", plate)
+		assert.Equal(t, "INVALID", plates[0])
 		assert.NoError(t, err)
 	})
 
@@ -92,9 +92,10 @@ func TestResponse_Plate(t *testing.T) {
 		img := Image{}
 
 		assert.NoError(t, json.Unmarshal(content, &img))
-		plate, err := img.Plate()
+		plates, err := img.Plates()
 
-		assert.Equal(t, "BH4316IH", plate)
+		assert.Equal(t, 1, len(plates))
+		assert.Equal(t, "BH4316IH", plates[0])
 		assert.NoError(t, err)
 	})
 }

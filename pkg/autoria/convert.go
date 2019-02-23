@@ -5,16 +5,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 )
 
-func (api *API) convert(endpoint string, params map[string]string) (map[string]string, error) {
-	strParams := make([]string, len(params))
-
-	for k, v := range params {
-		strParams = append(strParams, fmt.Sprintf("%s=%s", k, v))
-	}
-
-	resp, err := http.Get(api.BuildURL(endpoint, strParams...))
+func (api *API) convert(endpoint string, values url.Values) (url.Values, error) {
+	resp, err := http.Get(api.buildURL(endpoint, values))
 
 	if err != nil {
 		return nil, err
@@ -37,22 +32,22 @@ func (api *API) convert(endpoint string, params map[string]string) (map[string]s
 
 		converted := data.(map[string]interface{})["converted"].(map[string]interface{})
 
-		res := make(map[string]string)
+		values := url.Values{}
 		for k, v := range converted {
-			res[k] = fmt.Sprint(v)
+			values.Add(k, fmt.Sprint(v))
 		}
 
-		return res, nil
+		return values, nil
 	}
 
-	err = NewErr(fmt.Sprintf("invalid response code: %d", resp.StatusCode))
+	err = fmt.Errorf("invalid response code: %d", resp.StatusCode)
 	return nil, err
 }
 
-func (api *API) ConvertNewToOld(params map[string]string) (map[string]string, error) {
-	return api.convert("/new_to_old", params)
+func (api *API) ConvertNewToOld(values url.Values) (url.Values, error) {
+	return api.convert("/new_to_old", values)
 }
 
-func (api *API) ConvertOldToNew(params map[string]string) (map[string]string, error) {
-	return api.convert("/old_to_new", params)
+func (api *API) ConvertOldToNew(values url.Values) (url.Values, error) {
+	return api.convert("/old_to_new", values)
 }
