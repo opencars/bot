@@ -30,13 +30,13 @@ func StartHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 // Looks still not very beautiful.
 // TODO: Consider refactoring "bot" library to make it's usage much cleaner.
 func main() {
-	path := env.Get("DATA_PATH", "/etc/bot.json")
-	port := env.Get("PORT", "8080")
-	host := env.MustGet("HOST")
+	path := env.Fetch("DATA_PATH", "/etc/bot.json")
+	port := env.Fetch("PORT", "8080")
+	host := env.MustFetch("HOST")
 
-	recognizerURL := env.MustGet("RECOGNIZER_URL")
-	openCarsURL := env.MustGet("OPEN_CARS_URL")
-	autoRiaURL := env.MustGet("AUTO_RIA_TOKEN")
+	recognizerURL := env.MustFetch("RECOGNIZER_URL")
+	openCarsURL := env.MustFetch("OPEN_CARS_URL")
+	autoRiaURL := env.MustFetch("AUTO_RIA_TOKEN")
 
 	tbot := bot.New(path, recognizerURL, openCarsURL)
 
