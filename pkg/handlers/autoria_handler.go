@@ -147,7 +147,7 @@ func (h AutoRiaHandler) CarInfoHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Messa
 
 	carID := lexemes[1]
 
-	autoRiaToken := env.MustGet("AUTO_RIA_TOKEN")
+	autoRiaToken := env.MustFetch("AUTO_RIA_TOKEN")
 	autoRia := autoria.New(autoRiaToken)
 	resp, err := autoRia.CarPhotos(carID)
 

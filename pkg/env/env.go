@@ -5,19 +5,19 @@ import (
 	"os"
 )
 
-// MustGetEnv panics if environment variable does not exist, otherwise returns value.
-func MustGet(name string) string {
+// MustFetch panics if environment variable value is empty.
+func MustFetch(name string) string {
 	value, exist := os.LookupEnv(name)
 
 	if !exist {
-		panic(fmt.Sprintf("Environment variable %s does not set", name))
+		panic(fmt.Sprintf("environment variable %s is missing or empty", name))
 	}
 
 	return value
 }
 
-// GetEnv returns environment variable with ability to specify default value.
-func Get(key, fallback string) string {
+// Fetch returns environment variable value or fallback in case of empty.
+func Fetch(key, fallback string) string {
 	value, exists := os.LookupEnv(key)
 
 	if !exists {
