@@ -16,6 +16,10 @@ import (
 )
 
 func StartHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Message) {
+	if err := bot.SendAction(api, msg.Chat, bot.ChatTyping); err != nil {
+		log.Printf("action error: %s", err.Error())
+	}
+
 	text := fmt.Sprintf("Привіт, %s!", msg.Chat.FirstName)
 
 	if err := bot.Send(api, msg.Chat, text); err != nil {
