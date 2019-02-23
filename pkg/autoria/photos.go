@@ -28,7 +28,7 @@ func (photo Photo) URL() string {
 }
 
 func (api *API) CarPhotos(ID string) (res *PhotosResponse, err error) {
-	resp, err := http.Get(api.BuildURL("auto/fotos/" + ID))
+	resp, err := http.Get(api.buildURL("auto/fotos/"+ID, nil))
 	if err != nil {
 		return nil, err
 	}

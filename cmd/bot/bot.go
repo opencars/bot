@@ -5,7 +5,6 @@ import (
 	"log"
 	"regexp"
 
-	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/shal/opencars-bot/internal/bot"
 	"github.com/shal/opencars-bot/internal/subscription"
 	"github.com/shal/opencars-bot/pkg/autoria"
@@ -15,17 +14,20 @@ import (
 	"github.com/shal/opencars-bot/pkg/opencars"
 )
 
-func StartHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Message) {
-	if err := bot.SendAction(api, msg.Chat, bot.ChatTyping); err != nil {
+func StartHandler(msg *bot.Message) {
+	if err := msg.SetStatus(bot.ChatTyping); err != nil {
 		log.Printf("action error: %s", err.Error())
 	}
 
-	text := fmt.Sprintf("Привіт, %s!", msg.Chat.FirstName)
-
-	if err := bot.Send(api, msg.Chat, text); err != nil {
+	text := fmt.Sprintf("Привіт, %s!", msg.Chat().FirstName)
+	if err := msg.Send(text); err != nil {
 		log.Printf("send error: %s", err.Error())
 	}
 }
+//
+//func PhotoHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Message) {
+//
+//}
 
 // Looks still not very beautiful.
 // TODO: Consider refactoring "bot" library to make it's usage much cleaner.
@@ -68,6 +70,11 @@ func main() {
 		log.Panic(err)
 	}
 	tbot.HandleFuncRegexp(expr, autoRiaHandler.CarInfoHandler)
+
+	tbot.HandleFunc(bot.PhotoEvent, func(msg *bot.Message) {
+		msg.Send("Nice photo!")
+		// TODO: Implement logic of plates detection.
+	})
 
 	if err := tbot.Listen(host, port); err != nil {
 		log.Panic(err)

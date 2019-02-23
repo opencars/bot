@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"net/url"
 	"strings"
 	"time"
 
-	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/shal/opencars-bot/internal/bot"
 	"github.com/shal/opencars-bot/internal/subscription"
 	"github.com/shal/opencars-bot/pkg/autoria"
@@ -26,56 +26,55 @@ type AutoRiaHandler struct {
 	FilePath      string
 }
 
-// TODO: Split this method into few methods aka delegate code.
-func (h AutoRiaHandler) FollowHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Message) {
-	if err := bot.SendAction(api, msg.Chat, bot.ChatTyping); err != nil {
+func (h AutoRiaHandler) FollowHandler(msg *bot.Message) {
+	if err := msg.SetStatus(bot.ChatTyping); err != nil {
 		log.Printf("action error: %s", err.Error())
 	}
 
-	lexemes := strings.Split(msg.Text, " ")
+	lexemes := strings.Split(msg.Text(), " ")
 	if len(lexemes) < 2 || !strings.HasPrefix(lexemes[1], "https://auto.ria.com/search") {
-		if err := bot.Send(api, msg.Chat, "Помилковий запит."); err != nil {
+		if err := msg.Send("Помилковий запит."); err != nil {
 			log.Printf("send error: %s\n", err.Error())
 		}
 		return
 	}
 
-	params, err := autoria.ParseSearchParams(lexemes[1])
+	values, err := url.ParseQuery(lexemes[1])
 	if err != nil {
-		if err := bot.Send(api, msg.Chat, err.Error()); err != nil {
+		if err := msg.Send(err.Error()); err != nil {
 			log.Printf("send error: %s\n", err.Error())
 		}
 		return
 	}
 
 	// Convert params to old type, because frontend and api have different types.
-	params, err = h.API.ConvertNewToOld(params)
+	values, err = h.API.ConvertNewToOld(values)
 	if err != nil {
-		if err := bot.Send(api, msg.Chat, err.Error()); err != nil {
+		if err := msg.Send(err.Error()); err != nil {
 			log.Printf("send error: %s\n", err.Error())
 		}
 		return
 	}
 
 	// Create subscription, if it was not created.
-	if _, ok := h.Subscriptions[msg.Chat.ID]; !ok {
-		h.Subscriptions[msg.Chat.ID] = subscription.New(params)
+	if _, ok := h.Subscriptions[msg.Chat().ID]; !ok {
+		h.Subscriptions[msg.Chat().ID] = subscription.New()
 	}
 
-	h.Subscriptions[msg.Chat.ID].Start(func(quitter chan struct{}) {
-		search, err := h.API.SearchCars(params)
+	h.Subscriptions[msg.Chat().ID].Start(func(quitter chan struct{}) {
+		search, err := h.API.SearchCars(values)
 
 		if err != nil {
-			if err := bot.Send(api, msg.Chat, err.Error()); err != nil {
+			if err := msg.Send(err.Error()); err != nil {
 				log.Printf("send error: %s\n", err.Error())
 			}
 			return
 		}
 
-		// Get list of new cars.
-		newCarIDs := h.Subscriptions[msg.Chat.ID].NewCars(search.Result.SearchResult.Cars)
+		// Fetch list of new cars.
+		newCarIDs := h.Subscriptions[msg.Chat().ID].NewCars(search.Result.SearchResult.Cars)
 		// Store latest result.
-		h.Subscriptions[msg.Chat.ID].Cars = search.Result.SearchResult.Cars
+		h.Subscriptions[msg.Chat().ID].Cars = search.Result.SearchResult.Cars
 
 		newCars := make([]autoria.CarInfo, len(newCarIDs))
 
@@ -102,10 +101,7 @@ func (h AutoRiaHandler) FollowHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Messag
 			log.Println(err)
 		}
 
-		msg := tgbotapi.NewMessage(msg.Chat.ID, buff.String())
-		msg.DisableWebPagePreview = true
-
-		if err := bot.SendMsgHTML(msg, api); err != nil {
+		if err := msg.SendHTML(buff.String()); err != nil {
 			log.Printf("send error: %s", err.Error())
 		}
 
@@ -117,29 +113,29 @@ func (h AutoRiaHandler) FollowHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Messag
 	//api.UpdateData()
 }
 
-func (h AutoRiaHandler) StopHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Message) {
-	if err := bot.SendAction(api, msg.Chat, bot.ChatTyping); err != nil {
+func (h AutoRiaHandler) StopHandler(msg *bot.Message) {
+	if err := msg.SetStatus(bot.ChatTyping); err != nil {
 		log.Printf("action error: %s", err.Error())
 	}
 
-	if _, ok := h.Subscriptions[msg.Chat.ID]; !ok {
-		if err := bot.Send(api, msg.Chat, "Ви не підписані на оновлення 🤔"); err != nil {
+	if _, ok := h.Subscriptions[msg.Chat().ID]; !ok {
+		if err := msg.Send("Ви не підписані на оновлення 🤔"); err != nil {
 			log.Printf("send error: %s", err.Error())
 		}
 		return
 	}
 
-	h.Subscriptions[msg.Chat.ID].Stop()
+	h.Subscriptions[msg.Chat().ID].Stop()
 }
 
 // TODO: Refactor this handler.
 // Analyze first 50 photos, then find best number, that matches the rules.
 // Send message firstly.
-func (h AutoRiaHandler) CarInfoHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Message) {
-	lexemes := strings.Split(msg.Text, "_")
+func (h AutoRiaHandler) CarInfoHandler(msg *bot.Message) {
+	lexemes := strings.Split(msg.Text(), "_")
 
 	if len(lexemes) < 2 {
-		if err := bot.Send(api, msg.Chat, "Помилковий запит 😮"); err != nil {
+		if err := msg.Send("Помилковий запит 😮"); err != nil {
 			log.Printf("send error: %s", err.Error())
 		}
 		return
@@ -152,15 +148,15 @@ func (h AutoRiaHandler) CarInfoHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Messa
 	resp, err := autoRia.CarPhotos(carID)
 
 	if err != nil {
-		if err := bot.Send(api, msg.Chat, "Неправильний ідентифікатор 🙄️"); err != nil {
+		if err := msg.Send("Неправильний ідентифікатор 🙄️"); err != nil {
 			log.Printf("send error: %s", err.Error())
 		}
 		return
 	}
 
-	// Get user know about waiting time.
+	// Fetch user know about waiting time.
 	text := "Аналіз може зайняти до 1 хвилини 🐌"
-	if err := bot.SendHTML(api, msg.Chat, text); err != nil {
+	if err := msg.Send(text); err != nil {
 		log.Printf("send error: %s\n", err.Error())
 	}
 
@@ -199,14 +195,14 @@ func (h AutoRiaHandler) CarInfoHandler(api *tgbotapi.BotAPI, msg *tgbotapi.Messa
 			return
 		}
 
-		if err := bot.SendHTML(api, msg.Chat, buff.String()); err != nil {
+		if err := msg.Send(buff.String()); err != nil {
 			log.Printf("send error: %s\n", err.Error())
 		}
 
 		return
 	}
 
-	if err := bot.Send(api, msg.Chat, "Вибачте, номер не знайдено 😳"); err != nil {
+	if err := msg.Send("Вибачте, номер не знайдено 😳"); err != nil {
 		log.Printf("send error: %s\n", err.Error())
 	}
 }

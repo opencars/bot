@@ -2,9 +2,8 @@ package autoria
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"strings"
+	"net/url"
 )
 
 type SearchResultResponse struct {
@@ -19,14 +18,8 @@ type SearchResponse struct {
 	} `json:"result"`
 }
 
-func (api *API) SearchCars(params map[string]string) (*SearchResponse, error) {
-	strParams := make([]string, 0)
-
-	for k, v := range params {
-		strParams = append(strParams, fmt.Sprintf("%s=%s", k, v))
-	}
-
-	resp, err := http.Get(api.BuildURL("/auto/search", strParams...))
+func (api *API) SearchCars(values url.Values) (*SearchResponse, error) {
+	resp, err := http.Get(api.buildURL("/auto/search", values))
 
 	if err != nil {
 		return nil, err
@@ -40,23 +33,4 @@ func (api *API) SearchCars(params map[string]string) (*SearchResponse, error) {
 	}
 
 	return search, nil
-}
-
-func ParseSearchParams(url string) (map[string]string, error) {
-	query := strings.TrimPrefix(url, "https://auto.ria.com/search/?")
-	params := strings.Split(query, "&")
-
-	mapParams := make(map[string]string)
-
-	for _, v := range params {
-		lexemes := strings.Split(v, "=")
-
-		if len(lexemes) != 2 {
-			return nil, NewErr("invalid parameters")
-		}
-
-		mapParams[lexemes[0]] = lexemes[1]
-	}
-
-	return mapParams, nil
 }

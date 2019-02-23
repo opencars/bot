@@ -2,11 +2,10 @@ package handlers
 
 import (
 	"bytes"
-	"github.com/shal/opencars-bot/internal/bot"
 	"html/template"
 	"log"
 
-	"github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/shal/opencars-bot/internal/bot"
 	"github.com/shal/opencars-bot/pkg/opencars"
 )
 
@@ -14,15 +13,15 @@ type OpenCarsHandler struct {
 	OpenCars *opencars.API
 }
 
-func (h OpenCarsHandler) Handle(api *tgbotapi.BotAPI, msg *tgbotapi.Message) {
-	if err := bot.SendAction(api, msg.Chat, bot.ChatTyping); err != nil {
+func (h OpenCarsHandler) Handle(msg *bot.Message) {
+	if err := msg.Send(bot.ChatTyping); err != nil {
 		log.Printf("action error: %s", err.Error())
 	}
 
-	transport, err := h.OpenCars.Search(msg.Text)
+	transport, err := h.OpenCars.Search(msg.Text())
 
 	if err != nil {
-		if err := bot.Send(api, msg.Chat, "Вибач. Щось пішло не так 😢"); err != nil {
+		if err := msg.Send("Вибач. Щось пішло не так 😢"); err != nil {
 			log.Printf("send error: %s", err.Error())
 		}
 		return
@@ -39,12 +38,12 @@ func (h OpenCarsHandler) Handle(api *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 		Number string
 	}{
 		transport,
-		msg.Text,
+		msg.Text(),
 	}); err != nil {
 		log.Println(err)
 	}
 
-	if err := bot.SendHTML(api, msg.Chat, buff.String()); err != nil {
+	if err := msg.SendHTML(buff.String()); err != nil {
 		log.Printf("send error: %s\n", err.Error())
 	}
 }

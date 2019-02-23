@@ -3,19 +3,19 @@ package subscription
 
 // Subscription represents user subscription to car search.
 type Subscription struct {
-	Cars    []string          `json:"cars"`
-	Active  bool              `json:"active"`
-	Params  map[string]string `json:"params"`
+	Cars   []string `json:"cars"`
+	Active bool     `json:"active"`
+	//Params  map[string]string `json:"params"`
 	quitter chan struct{}
 }
 
 // New creates new clean Subscription.
-func New(params map[string]string) *Subscription {
+func New() *Subscription {
 	return &Subscription{
 		Cars:    make([]string, 0),
 		quitter: make(chan struct{}),
 		Active:  false,
-		Params:  params,
+		//Params:  params,
 	}
 }
 

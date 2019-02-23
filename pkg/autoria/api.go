@@ -1,28 +1,33 @@
 package autoria
 
 import (
-	"fmt"
-	"strings"
+	"net/url"
 )
 
 type API struct {
-	key  string
-	base string
+	key string
+	url url.URL
 }
 
 func New(key string) *API {
 	return &API{
-		key:  key,
-		base: "https://developers.ria.com",
+		key: key,
+		url: url.URL{
+			Scheme: "https",
+			Host:   "developers.ria.com",
+		},
 	}
 }
 
-func (api *API) BuildURL(path string, params ...string) string {
-	options := strings.Join(params, "&")
+func (api *API) buildURL(path string, values url.Values) string {
+	api.url.Path = path
 
-	if len(options) > 0 {
-		return fmt.Sprintf("%s/%s?api_key=%s&%s", api.base, path, api.key, options)
+	if values != nil {
+		values.Add("api_key", api.key)
+		api.url.RawQuery = values.Encode()
 	} else {
-		return fmt.Sprintf("%s/%s?api_key=%s", api.base, path, api.key)
+		api.url.RawQuery = "api_key" + api.key
 	}
+
+	return api.url.String()
 }

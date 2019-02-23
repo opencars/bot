@@ -2,8 +2,8 @@ package autoria
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
+	"net/url"
 )
 
 type Car struct {
@@ -37,15 +37,15 @@ type CarInfo struct {
 }
 
 func (api *API) CarInfo(ID string) (car *CarInfo, err error) {
-	resp, err := http.Get(api.BuildURL("/auto/info", fmt.Sprintf("auto_id=%s", ID)))
+	values := url.Values{}
+	values.Set("auto_id=", ID)
+	resp, err := http.Get(api.buildURL("/auto/info", values))
 
 	if err != nil {
 		return nil, err
 	}
 
-	err = json.NewDecoder(resp.Body).Decode(&car)
-
-	if err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&car); err != nil {
 		return nil, err
 	}
 
