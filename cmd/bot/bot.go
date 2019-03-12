@@ -33,12 +33,12 @@ func main() {
 	host := env.MustFetch("HOST")
 
 	recognizerURL := env.MustFetch("RECOGNIZER_URL")
-	openCarsURL := env.MustFetch("OPEN_CARS_URL")
-	autoRiaToken := env.MustFetch("AUTO_RIA_TOKEN")
+	openCarsURL   := env.MustFetch("OPEN_CARS_URL")
+	autoRiaToken  := env.MustFetch("AUTO_RIA_TOKEN")
 
-	tbot := bot.New(path, recognizerURL, openCarsURL)
+	app := bot.New(path, recognizerURL, openCarsURL)
 
-	tbot.HandleFunc("/start", StartHandler)
+	app.HandleFunc("/start", StartHandler)
 
 	autoRiaHandler := handlers.AutoRiaHandler{
 		API:           autoria.New(autoRiaToken),
@@ -53,25 +53,25 @@ func main() {
 		Recognizer: &openalpr.API{URI: recognizerURL},
 	}
 
-	tbot.HandleFunc("/follow", autoRiaHandler.FollowHandler)
-	tbot.HandleFunc("/stop", autoRiaHandler.StopHandler)
+	app.HandleFunc("/follow", autoRiaHandler.FollowHandler)
+	app.HandleFunc("/stop", autoRiaHandler.StopHandler)
 
 	expr, err := regexp.Compile(`^\p{L}{2}\d{4}\p{L}{2}$`)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	tbot.HandleFuncRegexp(expr, openCarsHandler.PlatesHandler)
+	app.HandleFuncRegexp(expr, openCarsHandler.PlatesHandler)
 
-	expr, err = regexp.Compile(`^/auto_\d+$`)
+	expr, err = regexp.Compile(`^/auto_[0-9]+$`)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	tbot.HandleFuncRegexp(expr, autoRiaHandler.CarInfoHandler)
-	tbot.HandleFunc(bot.PhotoEvent, openCarsHandler.PhotoHandler)
+	app.HandleFuncRegexp(expr, autoRiaHandler.CarInfoHandler)
+	app.HandleFunc(bot.PhotoEvent, openCarsHandler.PhotoHandler)
 
-	if err := tbot.Listen(host, port); err != nil {
+	if err := app.Listen(host, port); err != nil {
 		log.Panic(err)
 	}
 }

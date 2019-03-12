@@ -29,27 +29,6 @@ var (
 	WebPagePreview = true
 )
 
-type Message struct {
-	API *tgbotapi.BotAPI
-	msg *tgbotapi.Message
-}
-
-func (msg *Message) Chat() *tgbotapi.Chat {
-	return msg.msg.Chat
-}
-
-func (msg *Message) Text() string {
-	return msg.msg.Text
-}
-
-func (msg *Message) Photo() *[]tgbotapi.PhotoSize {
-	return msg.msg.Photo
-}
-
-type Handler interface {
-	Handle(msg *Message)
-}
-
 type HandlerFunc func(msg *Message)
 
 func (f HandlerFunc) Handle(msg *Message) {
@@ -149,7 +128,7 @@ func (bot *Bot) Listen(host, port string) error {
 		log.Fatal(err)
 	}
 
-	// Should be thread-safe out of the box.
+	// Should be thread-safe out of the box.	
 	path := fmt.Sprintf("/tg/%s", bot.API.Token)
 
 	http.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
@@ -162,8 +141,6 @@ func (bot *Bot) Listen(host, port string) error {
 			log.Printf("update error: %s", err.Error())
 		}
 
-		//fmt.Printf("Incoming request %v\n", r)
-		// Handle "Update".
 		bot.handle(update)
 	})
 
@@ -174,7 +151,7 @@ func (bot *Bot) Listen(host, port string) error {
 // Idiomatically, there is only one "Bot" instance per application.
 func New(path, recognizerUrl, storageUrl string) *Bot {
 	return &Bot{
-		API:        NewAPI(),
+		API:        newAPI(),
 		Recognizer: &openalpr.API{URI: recognizerUrl},
 		Storage:    &opencars.API{URI: storageUrl},
 		Mux:        make([]MuxEntry, 0),
@@ -182,9 +159,7 @@ func New(path, recognizerUrl, storageUrl string) *Bot {
 	}
 }
 
-// NewAPI creates new instance without Debug logs by default.
-// Export DEBUG=true to enable debug logs.
-func NewAPI() *tgbotapi.BotAPI {
+func newAPI() *tgbotapi.BotAPI {
 	telegramToken := env.MustFetch("TELEGRAM_TOKEN")
 	bot, err := tgbotapi.NewBotAPI(telegramToken)
 	if err != nil {
@@ -196,34 +171,4 @@ func NewAPI() *tgbotapi.BotAPI {
 	log.Printf("API authorized %s\n", bot.Self.UserName)
 
 	return bot
-}
-
-func (msg *Message) send(message tgbotapi.MessageConfig) error {
-	message.DisableWebPagePreview = !WebPagePreview
-	if _, err := msg.API.Send(message); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (msg *Message) Send(text string) error {
-	return msg.send(tgbotapi.NewMessage(msg.msg.Chat.ID, text))
-}
-
-func (msg *Message) SetStatus(status string) error {
-	action := tgbotapi.NewChatAction(msg.msg.Chat.ID, status)
-	if _, err := msg.API.Send(action); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// SendHTML sends message to the chat with text formatted as HTML.
-func (msg *Message) SendHTML(text string) error {
-	res := tgbotapi.NewMessage(msg.msg.Chat.ID, text)
-	res.ParseMode = tgbotapi.ModeHTML
-
-	return msg.send(res)
 }
