@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/shal/opencars-bot/pkg/env"
@@ -29,9 +30,9 @@ var (
 	WebPagePreview = true
 )
 
-type HandlerFunc func(msg *Message)
+type HandlerFunc func(msg *Event)
 
-func (f HandlerFunc) Handle(msg *Message) {
+func (f HandlerFunc) Handle(msg *Event) {
 	f(msg)
 }
 
@@ -70,7 +71,7 @@ func (bot *Bot) HandleRegexp(regexp *regexp.Regexp, handler Handler) {
 }
 
 // HandleFuncRegexp registers handler function by regular expression.
-func (bot *Bot) HandleFuncRegexp(regexp *regexp.Regexp, handler func(*Message)) {
+func (bot *Bot) HandleFuncRegexp(regexp *regexp.Regexp, handler func(*Event)) {
 	bot.Mux = append(bot.Mux, MuxEntry{
 		handler: HandlerFunc(handler),
 		match: func(x string) bool {
@@ -80,7 +81,7 @@ func (bot *Bot) HandleFuncRegexp(regexp *regexp.Regexp, handler func(*Message)) 
 }
 
 // HandleFunc registers handler function by key.
-func (bot *Bot) HandleFunc(key string, handler func(*Message)) {
+func (bot *Bot) HandleFunc(key string, handler func(*Event)) {
 	bot.Mux = append(bot.Mux, MuxEntry{
 		handler: HandlerFunc(handler),
 		match: func(text string) bool {
@@ -90,7 +91,7 @@ func (bot *Bot) HandleFunc(key string, handler func(*Message)) {
 }
 
 func (bot *Bot) handleMsg(request *tgbotapi.Message) {
-	msg := &Message{bot.API, request}
+	msg := &Event{bot.API, request}
 
 	for _, entry := range bot.Mux {
 		if entry.match(PhotoEvent) {
@@ -128,7 +129,6 @@ func (bot *Bot) Listen(host, port string) error {
 		log.Fatal(err)
 	}
 
-	// Should be thread-safe out of the box.	
 	path := fmt.Sprintf("/tg/%s", bot.API.Token)
 
 	http.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
@@ -141,7 +141,11 @@ func (bot *Bot) Listen(host, port string) error {
 			log.Printf("update error: %s", err.Error())
 		}
 
+		start := time.Now()
+		fmt.Printf("Started time: %s\n", start.Format("2006-01-02 15:04:05"))
 		bot.handle(update)
+		fmt.Printf("Finished time: %s\n", time.Now().Format("2006-01-02 15:04:05"))
+		fmt.Printf("Execution time: %f\n", time.Since(start).Seconds())
 	})
 
 	return http.ListenAndServe(":"+port, http.DefaultServeMux)

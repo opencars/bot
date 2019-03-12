@@ -6,20 +6,21 @@ import (
 	"github.com/shal/opencars-bot/internal/bot"
 )
 
-func somethingWentWrong(msg *bot.Message) {
+func somethingWentWrong(msg *bot.Event) {
 	if err := msg.Send("Вибач. Щось пішло не так 😢"); err != nil {
 		log.Printf("send error: %s", err.Error())
 	}
 }
 
-func (h OpenCarsHandler) PhotoHandler(msg *bot.Message) {
-	photos := *msg.Photo()
+func (h OpenCarsHandler) PhotoHandler(msg *bot.Event) {
+	photos := *msg.Message.Photo
 
 	if err := msg.SetStatus(bot.ChatTyping); err != nil {
 		log.Printf("action error: %s", err.Error())
 	}
 
 	// TODO: Validate that photo size is big enough.
+
 	if len(photos) < 1 {
 		somethingWentWrong(msg)
 		return
@@ -51,7 +52,7 @@ func (h OpenCarsHandler) PhotoHandler(msg *bot.Message) {
 
 	plates, err := image.Plates()
 	if err != nil {
-		log.Printf(err.Error())
+		log.Println(err.Error())
 		// TODO: Send something in case of error.
 		return
 	}
