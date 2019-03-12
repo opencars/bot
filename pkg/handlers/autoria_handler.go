@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"github.com/shal/opencars-bot/pkg/match"
 	"html/template"
 	"log"
 	"net/url"
@@ -16,21 +17,24 @@ import (
 	"github.com/shal/opencars-bot/pkg/opencars"
 )
 
-type AutoRiaHandler struct {
-	API        *autoria.API
-	Recognizer *openalpr.API
-	Storage    *opencars.API
+const (
+	MaxSize = 50
+)
 
+type AutoRiaHandler struct {
+	API           *autoria.API
+	Recognizer    *openalpr.API
+	Storage       *opencars.API
 	Subscriptions map[int64]*subscription.Subscription
 	FilePath      string
 }
 
-func (h AutoRiaHandler) FollowHandler(msg *bot.Message) {
+func (h AutoRiaHandler) FollowHandler(msg *bot.Event) {
 	if err := msg.SetStatus(bot.ChatTyping); err != nil {
 		log.Printf("action error: %s", err.Error())
 	}
 
-	lexemes := strings.Split(msg.Text(), " ")
+	lexemes := strings.Split(msg.Message.Text, " ")
 	if len(lexemes) < 2 || !strings.HasPrefix(lexemes[1], "https://auto.ria.com/search") {
 		if err := msg.Send("Помилковий запит."); err != nil {
 			log.Printf("send error: %s\n", err.Error())
@@ -56,11 +60,11 @@ func (h AutoRiaHandler) FollowHandler(msg *bot.Message) {
 	}
 
 	// Create subscription, if it was not created.
-	if _, ok := h.Subscriptions[msg.Chat().ID]; !ok {
-		h.Subscriptions[msg.Chat().ID] = subscription.New()
+	if _, ok := h.Subscriptions[msg.Message.Chat.ID]; !ok {
+		h.Subscriptions[msg.Message.Chat.ID] = subscription.New()
 	}
 
-	h.Subscriptions[msg.Chat().ID].Start(func(quitter chan struct{}) {
+	h.Subscriptions[msg.Message.Chat.ID].Start(func(quitter chan struct{}) {
 		search, err := h.API.SearchCars(values)
 
 		if err != nil {
@@ -71,9 +75,9 @@ func (h AutoRiaHandler) FollowHandler(msg *bot.Message) {
 		}
 
 		// Fetch list of new cars.
-		newCarIDs := h.Subscriptions[msg.Chat().ID].NewCars(search.Result.SearchResult.Cars)
+		newCarIDs := h.Subscriptions[msg.Message.Chat.ID].NewCars(search.Result.SearchResult.Cars)
 		// Store latest result.
-		h.Subscriptions[msg.Chat().ID].Cars = search.Result.SearchResult.Cars
+		h.Subscriptions[msg.Message.Chat.ID].Cars = search.Result.SearchResult.Cars
 
 		newCars := make([]autoria.CarInfo, len(newCarIDs))
 
@@ -111,28 +115,59 @@ func (h AutoRiaHandler) FollowHandler(msg *bot.Message) {
 	//api.UpdateData()
 }
 
-func (h AutoRiaHandler) StopHandler(msg *bot.Message) {
+func (h AutoRiaHandler) StopHandler(msg *bot.Event) {
 	if err := msg.SetStatus(bot.ChatTyping); err != nil {
 		log.Printf("action error: %s", err.Error())
 	}
 
-	if _, ok := h.Subscriptions[msg.Chat().ID]; !ok {
+	if _, ok := h.Subscriptions[msg.Message.Chat.ID]; !ok {
 		if err := msg.Send("Ви не підписані на оновлення 🤔"); err != nil {
 			log.Printf("send error: %s", err.Error())
 		}
 		return
 	}
 
-	h.Subscriptions[msg.Chat().ID].Stop()
+	h.Subscriptions[msg.Message.Chat.ID].Stop()
 }
 
-// TODO: Refactor this handler.
+//
+func (h AutoRiaHandler) AnalyzePhotos(photos []autoria.Photo) string {
+	bestMatch := ""
+
+	for _, photo := range photos {
+		response, err := h.Recognizer.Recognize(photo.URL())
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+
+		plates, err := response.Plates()
+		if err != nil {
+			continue
+		}
+
+		if bestMatch == "" {
+			bestMatch = plates[0]
+		}
+
+		for _, plate := range plates {
+			if match.EuroPlates(plate) {
+				return plate
+			}
+		}
+	}
+
+	return bestMatch
+}
+
 // Analyze first 50 photos, then find best number, that matches the rules.
 // Send message firstly.
-func (h AutoRiaHandler) CarInfoHandler(msg *bot.Message) {
-	msg.SetStatus(bot.ChatTyping)
+func (h AutoRiaHandler) CarInfoHandler(msg *bot.Event) {
+	if err := msg.SetStatus(bot.ChatTyping); err != nil {
+		log.Printf("action error: %s", err.Error())
+	}
 
-	lexemes := strings.Split(msg.Text(), "_")
+	lexemes := strings.Split(msg.Message.Text, "_")
 
 	if len(lexemes) < 2 {
 		if err := msg.Send("Помилковий запит 😮"); err != nil {
@@ -141,11 +176,9 @@ func (h AutoRiaHandler) CarInfoHandler(msg *bot.Message) {
 		return
 	}
 
-	carID := lexemes[1]
-
 	autoRiaToken := env.MustFetch("AUTO_RIA_TOKEN")
 	autoRia := autoria.New(autoRiaToken)
-	resp, err := autoRia.CarPhotos(carID)
+	resp, err := autoRia.CarPhotos(lexemes[1])
 
 	if err != nil {
 		if err := msg.Send("Неправильний ідентифікатор 🙄️"); err != nil {
@@ -154,55 +187,44 @@ func (h AutoRiaHandler) CarInfoHandler(msg *bot.Message) {
 		return
 	}
 
-	// Fetch user know about waiting time.
+	// Get user know about waiting time.
 	text := "Аналіз може зайняти до 1 хвилини 🐌"
 	if err := msg.Send(text); err != nil {
 		log.Printf("send error: %s\n", err.Error())
 	}
 
-	for _, photo := range resp.Photos {
-		resp, err := h.Recognizer.Recognize(photo.URL())
-		if err != nil {
-			log.Println(err)
-			continue
-		}
-
-		plates, err := resp.Plates()
-		if err != nil {
-			continue
-		}
-
-		transport, err := h.Storage.Search(plates[0])
-		if err != nil {
-			log.Println(err)
-			return
-		}
-
-		tpl, err := template.ParseFiles("templates/car_info.tpl")
-		if err != nil {
-			log.Println(err)
-			return
-		}
-
-		buff := bytes.Buffer{}
-		if err := tpl.Execute(&buff, struct {
-			Cars   []opencars.Transport
-			Number string
-		}{
-			transport, plates[0],
-		}); err != nil {
-			log.Println(err)
-			return
-		}
-
-		if err := msg.SendHTML(buff.String()); err != nil {
+	plate := h.AnalyzePhotos(resp.Photos)
+	if plate == "" {
+		if err := msg.Send("Вибачте, номер не знайдено 😳"); err != nil {
 			log.Printf("send error: %s\n", err.Error())
 		}
-
 		return
 	}
 
-	if err := msg.Send("Вибачте, номер не знайдено 😳"); err != nil {
+	transport, err := h.Storage.Search(plate)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	tpl, err := template.ParseFiles("templates/car_info.tpl")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	buff := bytes.Buffer{}
+	if err := tpl.Execute(&buff, struct {
+		Cars   []opencars.Transport
+		Number string
+	}{
+		transport, plate,
+	}); err != nil {
+		log.Println(err)
+		return
+	}
+
+	if err := msg.SendHTML(buff.String()); err != nil {
 		log.Printf("send error: %s\n", err.Error())
 	}
 }

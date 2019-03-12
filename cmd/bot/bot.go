@@ -14,12 +14,12 @@ import (
 	"github.com/shal/opencars-bot/pkg/opencars"
 )
 
-func StartHandler(msg *bot.Message) {
+func StartHandler(msg *bot.Event) {
 	if err := msg.SetStatus(bot.ChatTyping); err != nil {
 		log.Printf("action error: %s", err.Error())
 	}
 
-	text := fmt.Sprintf("Привіт, %s!", msg.Chat().FirstName)
+	text := fmt.Sprintf("Привіт, %s!", msg.Message.Chat.FirstName)
 	if err := msg.Send(text); err != nil {
 		log.Printf("send error: %s", err.Error())
 	}
@@ -33,8 +33,8 @@ func main() {
 	host := env.MustFetch("HOST")
 
 	recognizerURL := env.MustFetch("RECOGNIZER_URL")
-	openCarsURL   := env.MustFetch("OPEN_CARS_URL")
-	autoRiaToken  := env.MustFetch("AUTO_RIA_TOKEN")
+	openCarsURL := env.MustFetch("OPEN_CARS_URL")
+	autoRiaToken := env.MustFetch("AUTO_RIA_TOKEN")
 
 	app := bot.New(path, recognizerURL, openCarsURL)
 
