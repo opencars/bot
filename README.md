@@ -6,6 +6,8 @@
 
 ## Overview
 
+![Architecture Overview](./doc/images/architecture.svg)
+
 List of supported environment variables
 
 | Name             | Description        |
