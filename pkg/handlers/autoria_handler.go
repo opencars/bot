@@ -2,19 +2,19 @@ package handlers
 
 import (
 	"bytes"
-	"github.com/shal/opencars-bot/pkg/match"
+	"github.com/opencars/bot/pkg/match"
 	"html/template"
 	"log"
 	"net/url"
 	"strings"
 	"time"
 
-	"github.com/shal/opencars-bot/internal/bot"
-	"github.com/shal/opencars-bot/internal/subscription"
-	"github.com/shal/opencars-bot/pkg/autoria"
-	"github.com/shal/opencars-bot/pkg/env"
-	"github.com/shal/opencars-bot/pkg/openalpr"
-	"github.com/shal/opencars-bot/pkg/opencars"
+	"github.com/opencars/bot/internal/bot"
+	"github.com/opencars/bot/internal/subscription"
+	"github.com/opencars/bot/pkg/autoria"
+	"github.com/opencars/bot/pkg/env"
+	"github.com/opencars/bot/pkg/openalpr"
+	"github.com/opencars/bot/pkg/opencars"
 )
 
 const (
