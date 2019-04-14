@@ -3,7 +3,7 @@ package handlers
 import (
 	"log"
 
-	"github.com/shal/opencars-bot/internal/bot"
+	"github.com/opencars/bot/internal/bot"
 )
 
 func (h OpenCarsHandler) PlatesHandler(msg *bot.Event) {

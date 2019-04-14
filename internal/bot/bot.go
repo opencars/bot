@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/shal/opencars-bot/pkg/env"
-	"github.com/shal/opencars-bot/pkg/openalpr"
-	"github.com/shal/opencars-bot/pkg/opencars"
+	"github.com/opencars/bot/pkg/env"
+	"github.com/opencars/bot/pkg/openalpr"
+	"github.com/opencars/bot/pkg/opencars"
 )
 
 // Constant values for ChatActions.

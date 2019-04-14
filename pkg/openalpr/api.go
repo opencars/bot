@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"sort"
 
-	"github.com/shal/opencars-bot/pkg/match"
+	"github.com/opencars/bot/pkg/match"
 )
 
 type API struct {

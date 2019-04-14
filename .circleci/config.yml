@@ -6,7 +6,7 @@ jobs:
       - image: circleci/golang:1.11
         environment:
           GO111MODULE: "on"
-    working_directory: /go/src/github.com/shal/opencars-bot
+    working_directory: /go/src/github.com/opencars/bot
     steps:
       - checkout
 

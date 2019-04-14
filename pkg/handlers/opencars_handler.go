@@ -5,8 +5,8 @@ import (
 	"html/template"
 	"log"
 
-	"github.com/shal/opencars-bot/pkg/openalpr"
-	"github.com/shal/opencars-bot/pkg/opencars"
+	"github.com/opencars/bot/pkg/openalpr"
+	"github.com/opencars/bot/pkg/opencars"
 )
 
 type OpenCarsHandler struct {
