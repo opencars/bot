@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"bytes"
-	"github.com/opencars/bot/pkg/match"
 	"html/template"
 	"log"
 	"net/url"
@@ -14,7 +13,9 @@ import (
 	"github.com/opencars/bot/pkg/autoria"
 	"github.com/opencars/bot/pkg/env"
 	"github.com/opencars/bot/pkg/openalpr"
-	"github.com/opencars/bot/pkg/opencars"
+
+	"github.com/opencars/bot/pkg/match"
+	"github.com/opencars/toolkit/sdk"
 )
 
 const (
@@ -24,7 +25,7 @@ const (
 type AutoRiaHandler struct {
 	API           *autoria.API
 	Recognizer    *openalpr.API
-	Storage       *opencars.API
+	Storage       *sdk.Client
 	Subscriptions map[int64]*subscription.Subscription
 	FilePath      string
 }
@@ -201,7 +202,7 @@ func (h AutoRiaHandler) CarInfoHandler(msg *bot.Event) {
 		return
 	}
 
-	transport, err := h.Storage.Search(plate)
+	transport, err := h.Storage.SearchLimit(plate, 5)
 	if err != nil {
 		log.Println(err)
 		return
@@ -215,7 +216,7 @@ func (h AutoRiaHandler) CarInfoHandler(msg *bot.Event) {
 
 	buff := bytes.Buffer{}
 	if err := tpl.Execute(&buff, struct {
-		Cars   []opencars.Transport
+		Cars   []sdk.Transport
 		Number string
 	}{
 		transport, plate,
