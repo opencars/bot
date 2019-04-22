@@ -11,7 +11,7 @@ import (
 	"github.com/opencars/bot/pkg/env"
 	"github.com/opencars/bot/pkg/handlers"
 	"github.com/opencars/bot/pkg/openalpr"
-	"github.com/opencars/bot/pkg/opencars"
+	"github.com/opencars/toolkit/sdk"
 )
 
 func StartHandler(msg *bot.Event) {
@@ -43,13 +43,13 @@ func main() {
 	autoRiaHandler := handlers.AutoRiaHandler{
 		API:           autoria.New(autoRiaToken),
 		Recognizer:    &openalpr.API{URI: recognizerURL},
-		Storage:       &opencars.API{URI: openCarsURL},
+		Storage:       sdk.New(openCarsURL),
 		Subscriptions: make(map[int64]*subscription.Subscription),
 		FilePath:      path,
 	}
 
 	openCarsHandler := handlers.OpenCarsHandler{
-		OpenCars:   &opencars.API{URI: openCarsURL},
+		OpenCars:   sdk.New(openCarsURL),
 		Recognizer: &openalpr.API{URI: recognizerURL},
 	}
 

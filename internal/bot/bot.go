@@ -13,7 +13,7 @@ import (
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/opencars/bot/pkg/env"
 	"github.com/opencars/bot/pkg/openalpr"
-	"github.com/opencars/bot/pkg/opencars"
+	"github.com/opencars/toolkit"
 )
 
 // Constant values for ChatActions.
@@ -45,7 +45,7 @@ type MuxEntry struct {
 type Bot struct {
 	API        *tgbotapi.BotAPI
 	Recognizer *openalpr.API
-	Storage    *opencars.API
+	Storage    *toolkit.Client
 	FilePath   string
 	Mux        []MuxEntry
 }
@@ -157,7 +157,7 @@ func New(path, recognizerUrl, storageUrl string) *Bot {
 	return &Bot{
 		API:        newAPI(),
 		Recognizer: &openalpr.API{URI: recognizerUrl},
-		Storage:    &opencars.API{URI: storageUrl},
+		Storage:    toolkit.New(storageUrl),
 		Mux:        make([]MuxEntry, 0),
 		FilePath:   path,
 	}

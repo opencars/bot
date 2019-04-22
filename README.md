@@ -1,8 +1,8 @@
-# OpenCars Bot
+# Bot
 
 [![Report](https://goreportcard.com/badge/github.com/opencars/bot)](https://goreportcard.com/report/github.com/opencars/bot)
 
-> :blue_car: OpenCars Bot will help to find a dream vehicle
+> :blue_car: Bot will help to find a dream vehicle
 
 ## Overview
 
