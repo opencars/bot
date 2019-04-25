@@ -27,7 +27,7 @@ func (h OpenCarsHandler) getInfoByPlates(plate string) (string, error) {
 
 	buff := bytes.Buffer{}
 	if err := tpl.Execute(&buff, struct {
-		Cars   []sdk.Transport
+		Cars   []sdk.Operation
 		Number string
 	}{
 		transport,

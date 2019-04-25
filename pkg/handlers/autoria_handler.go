@@ -216,7 +216,7 @@ func (h AutoRiaHandler) CarInfoHandler(msg *bot.Event) {
 
 	buff := bytes.Buffer{}
 	if err := tpl.Execute(&buff, struct {
-		Cars   []sdk.Transport
+		Cars   []sdk.Operation
 		Number string
 	}{
 		transport, plate,
