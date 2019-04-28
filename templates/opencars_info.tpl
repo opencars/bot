@@ -3,7 +3,7 @@
 
 {{ range $i, $car := .Cars -}}
 <b>Номер: </b>{{ .Number }}
-<b>Модель: </b>{{ .Model }}
+<b>Модель: </b>{{ .Brand }} {{ .Model }}
 <b>Рік випуску: </b>{{ .Year }}
 <b>Дата: </b>{{ .Date }}
 <b>Колір: </b>{{ .Color }}
