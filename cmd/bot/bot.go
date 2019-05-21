@@ -5,13 +5,14 @@ import (
 	"log"
 	"regexp"
 
+	"github.com/opencars/toolkit/sdk"
+
 	"github.com/opencars/bot/internal/bot"
 	"github.com/opencars/bot/internal/subscription"
 	"github.com/opencars/bot/pkg/autoria"
 	"github.com/opencars/bot/pkg/env"
 	"github.com/opencars/bot/pkg/handlers"
 	"github.com/opencars/bot/pkg/openalpr"
-	"github.com/opencars/toolkit/sdk"
 )
 
 func StartHandler(msg *bot.Event) {
