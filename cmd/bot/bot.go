@@ -72,6 +72,14 @@ func main() {
 	app.HandleFuncRegexp(expr, autoRiaHandler.CarInfoHandler)
 	app.HandleFunc(bot.PhotoEvent, openCarsHandler.PhotoHandler)
 
+	// Handler for "/plates" keyword.
+	// Usage: /plates AA1234XX.
+	app.HandleFunc("/plates", openCarsHandler.PlatesHandler)
+
+	// Handler for "/vin" keyword.
+	// Usage: /vin X0X0XXXXXXX0000X0.
+	app.HandleFunc("/vin", openCarsHandler.NotImplemented)
+
 	if err := app.Listen(host, port); err != nil {
 		log.Panic(err)
 	}

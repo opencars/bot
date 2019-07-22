@@ -86,6 +86,7 @@ func (bot *Bot) HandleFunc(key string, handler func(*Event)) {
 	bot.Mux = append(bot.Mux, MuxEntry{
 		handler: HandlerFunc(handler),
 		match: func(text string) bool {
+			log.Println(text, strings.HasPrefix(text, key))
 			return strings.HasPrefix(text, key)
 		},
 	})
@@ -94,21 +95,23 @@ func (bot *Bot) HandleFunc(key string, handler func(*Event)) {
 func (bot *Bot) handleMsg(request *tgbotapi.Message) {
 	msg := &Event{bot.API, request}
 
+	if request.Photo != nil {
+		for _, entry := range bot.Mux {
+			if entry.match(PhotoEvent) {
+				entry.handler.Handle(msg)
+			}
+		}
+	}
+
+	if request.Sticker != nil {
+		for _, entry := range bot.Mux {
+			if entry.match(StickerEvent) {
+				entry.handler.Handle(msg)
+			}
+		}
+	}
+
 	for _, entry := range bot.Mux {
-		if entry.match(PhotoEvent) {
-			if request.Photo != nil {
-				entry.handler.Handle(msg)
-			}
-			return
-		}
-
-		if entry.match(StickerEvent) {
-			if request.Sticker != nil {
-				entry.handler.Handle(msg)
-			}
-			return
-		}
-
 		if entry.match(request.Text) {
 			entry.handler.Handle(msg)
 			return
