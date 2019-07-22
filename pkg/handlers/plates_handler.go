@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"log"
+	"strings"
 
 	"github.com/opencars/bot/internal/bot"
 )
@@ -11,7 +12,8 @@ func (h OpenCarsHandler) PlatesHandler(msg *bot.Event) {
 		log.Printf("action error: %s", err.Error())
 	}
 
-	text, err := h.getInfoByPlates(msg.Message.Text)
+	plates := strings.TrimPrefix(msg.Message.Text, "/plates ")
+	text, err := h.getInfoByPlates(plates)
 	if err != nil {
 		log.Println(err.Error())
 	}
