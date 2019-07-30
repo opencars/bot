@@ -73,12 +73,15 @@ func (bot *Bot) HandlePhoto(handler func(*Event)) {
 }
 
 func (bot *Bot) handleMsg(request *tgbotapi.Message) {
+	log.Printf("User { ID: %d, name: %s }\n", request.From.ID, request.From)
+
 	if request.Photo != nil && bot.photoHandler != nil {
 		bot.photoHandler.Handle(&Event{bot.api, request})
 	}
 
 	for _, entry := range bot.mux {
 		if entry.match(request.Text) {
+			log.Printf("Text: %s\n", request.Text)
 			entry.handler.Handle(&Event{bot.api, request})
 			return
 		}

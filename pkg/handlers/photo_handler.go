@@ -29,10 +29,12 @@ func (h OpenCarsHandler) PhotoHandler(msg *bot.Event) {
 	// TODO: Think about this code snippet.
 	url, err := msg.API.GetFileDirectURL(photos[len(photos)-1].FileID)
 	if err != nil {
+
 		somethingWentWrong(msg)
 		log.Println(err.Error())
 		return
 	}
+	log.Printf("Photo: %s\n", url)
 
 	// Send received photo to be recognized.
 	image, err := h.Recognizer.Recognize(url)
