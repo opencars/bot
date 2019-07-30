@@ -43,7 +43,7 @@ jobs:
         environment:
           GO111MODULE: "off"
           USER_NAME: "Ali Shanaakh"
-          USER_EMAIL: "github@shanaakh.pro"
+          USER_EMAIL: "github@shal.dev"
     steps:
       - checkout
 
