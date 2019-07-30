@@ -3,28 +3,19 @@ package bot
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"regexp"
 	"strings"
-	"time"
-
-	"github.com/go-telegram-bot-api/telegram-bot-api"
 
 	"github.com/opencars/bot/pkg/env"
-	"github.com/opencars/bot/pkg/openalpr"
-	"github.com/opencars/toolkit/sdk"
 )
 
 // Constant values for ChatActions.
 const (
 	ChatTyping = "typing"
-)
-
-const (
-	PhotoEvent   = "/photo"
-	StickerEvent = "/sticker"
 )
 
 var (
@@ -44,16 +35,14 @@ type MuxEntry struct {
 
 // Bot is structure representation of Bot instance.
 type Bot struct {
-	API        *tgbotapi.BotAPI
-	Recognizer *openalpr.API
-	Storage    *sdk.Client
-	FilePath   string
-	Mux        []MuxEntry
+	api          *tgbotapi.BotAPI
+	mux          []MuxEntry
+	photoHandler Handler
 }
 
 // Handle registers handler by key.
 func (bot *Bot) Handle(key string, handler Handler) {
-	bot.Mux = append(bot.Mux, MuxEntry{
+	bot.mux = append(bot.mux, MuxEntry{
 		handler: handler,
 		match: func(text string) bool {
 			return strings.HasPrefix(text, key)
@@ -63,63 +52,40 @@ func (bot *Bot) Handle(key string, handler Handler) {
 
 // HandleRegexp registers handler by regular expression.
 func (bot *Bot) HandleRegexp(regexp *regexp.Regexp, handler Handler) {
-	bot.Mux = append(bot.Mux, MuxEntry{
+	bot.mux = append(bot.mux, MuxEntry{
 		handler: handler,
-		match: func(x string) bool {
-			return regexp.MatchString(x)
-		},
+		match:   regexp.MatchString,
 	})
 }
 
 // HandleFuncRegexp registers handler function by regular expression.
 func (bot *Bot) HandleFuncRegexp(regexp *regexp.Regexp, handler func(*Event)) {
-	bot.Mux = append(bot.Mux, MuxEntry{
-		handler: HandlerFunc(handler),
-		match: func(x string) bool {
-			return regexp.MatchString(x)
-		},
-	})
+	bot.HandleRegexp(regexp, HandlerFunc(handler))
 }
 
 // HandleFunc registers handler function by key.
 func (bot *Bot) HandleFunc(key string, handler func(*Event)) {
-	bot.Mux = append(bot.Mux, MuxEntry{
-		handler: HandlerFunc(handler),
-		match: func(text string) bool {
-			log.Println(text, strings.HasPrefix(text, key))
-			return strings.HasPrefix(text, key)
-		},
-	})
+	bot.Handle(key, HandlerFunc(handler))
+}
+
+func (bot *Bot) HandlePhoto(handler func(*Event)) {
+	bot.photoHandler = HandlerFunc(handler)
 }
 
 func (bot *Bot) handleMsg(request *tgbotapi.Message) {
-	msg := &Event{bot.API, request}
-
-	if request.Photo != nil {
-		for _, entry := range bot.Mux {
-			if entry.match(PhotoEvent) {
-				entry.handler.Handle(msg)
-			}
-		}
+	if request.Photo != nil && bot.photoHandler != nil {
+		bot.photoHandler.Handle(&Event{bot.api, request})
 	}
 
-	if request.Sticker != nil {
-		for _, entry := range bot.Mux {
-			if entry.match(StickerEvent) {
-				entry.handler.Handle(msg)
-			}
-		}
-	}
-
-	for _, entry := range bot.Mux {
+	for _, entry := range bot.mux {
 		if entry.match(request.Text) {
-			entry.handler.Handle(msg)
+			entry.handler.Handle(&Event{bot.api, request})
 			return
 		}
 	}
 }
 
-func (bot *Bot) handle(update tgbotapi.Update) {
+func (bot *Bot) handle(update *tgbotapi.Update) {
 	if update.Message != nil {
 		bot.handleMsg(update.Message)
 	}
@@ -127,29 +93,25 @@ func (bot *Bot) handle(update tgbotapi.Update) {
 
 // Listen for telegram updates.
 func (bot *Bot) Listen(host, port string) error {
-	URL := fmt.Sprintf("%s/tg/%s", host, bot.API.Token)
-	_, err := bot.API.SetWebhook(tgbotapi.NewWebhook(URL))
+	URL := fmt.Sprintf("%s/tg/%s", host, bot.api.Token)
+	_, err := bot.api.SetWebhook(tgbotapi.NewWebhook(URL))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	path := fmt.Sprintf("/tg/%s", bot.API.Token)
+	path := fmt.Sprintf("/tg/%s", bot.api.Token)
 
 	http.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 		bytes, _ := ioutil.ReadAll(r.Body)
 		r.Body.Close()
 
-		update := tgbotapi.Update{}
-
-		if err := json.Unmarshal(bytes, &update); err != nil {
+		update := new(tgbotapi.Update)
+		if err := json.Unmarshal(bytes, update); err != nil {
 			log.Printf("update error: %s", err.Error())
 		}
 
-		start := time.Now()
-		fmt.Printf("Started time: %s\n", start.Format("2006-01-02 15:04:05"))
+		// TODO: Log message content and user ID.
 		bot.handle(update)
-		fmt.Printf("Finished time: %s\n", time.Now().Format("2006-01-02 15:04:05"))
-		fmt.Printf("Execution time: %f\n", time.Since(start).Seconds())
 	})
 
 	return http.ListenAndServe(":"+port, http.DefaultServeMux)
@@ -157,13 +119,10 @@ func (bot *Bot) Listen(host, port string) error {
 
 // New creates new instance of the Bot.
 // Idiomatically, there is only one "Bot" instance per application.
-func New(path, recognizerUrl, storageUrl string) *Bot {
+func New() *Bot {
 	return &Bot{
-		API:        newAPI(),
-		Recognizer: &openalpr.API{URI: recognizerUrl},
-		Storage:    sdk.New(storageUrl),
-		Mux:        make([]MuxEntry, 0),
-		FilePath:   path,
+		api: newAPI(),
+		mux: make([]MuxEntry, 0),
 	}
 }
 
@@ -174,7 +133,6 @@ func newAPI() *tgbotapi.BotAPI {
 		panic(err)
 	}
 
-	//bot.Debug = env.Fetch("LOG_LEVEL", "DEBUG") == "DEBUG"
 	bot.Debug = false
 	log.Printf("API authorized %s\n", bot.Self.UserName)
 
