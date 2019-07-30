@@ -26,10 +26,7 @@ func StartHandler(msg *bot.Event) {
 	}
 }
 
-// Looks still not very beautiful.
-// TODO: Consider refactoring "bot" library to make it's usage much cleaner.
 func main() {
-	path := env.Fetch("DATA_PATH", "/etc/bot.json")
 	port := env.Fetch("PORT", "8080")
 	host := env.MustFetch("HOST")
 
@@ -37,7 +34,7 @@ func main() {
 	openCarsURL := env.MustFetch("OPEN_CARS_URL")
 	autoRiaToken := env.MustFetch("AUTO_RIA_TOKEN")
 
-	app := bot.New(path, recognizerURL, openCarsURL)
+	app := bot.New()
 
 	app.HandleFunc("/start", StartHandler)
 
@@ -46,7 +43,6 @@ func main() {
 		Recognizer:    &openalpr.API{URI: recognizerURL},
 		Storage:       sdk.New(openCarsURL),
 		Subscriptions: make(map[int64]*subscription.Subscription),
-		FilePath:      path,
 	}
 
 	openCarsHandler := handlers.OpenCarsHandler{
@@ -54,32 +50,26 @@ func main() {
 		Recognizer: &openalpr.API{URI: recognizerURL},
 	}
 
-	app.HandleFunc("/follow", autoRiaHandler.FollowHandler)
-	app.HandleFunc("/stop", autoRiaHandler.StopHandler)
-
 	expr, err := regexp.Compile(`^\p{L}{2}\d{4}\p{L}{2}$`)
 	if err != nil {
 		log.Panic(err)
 	}
-
 	app.HandleFuncRegexp(expr, openCarsHandler.PlatesHandler)
 
 	expr, err = regexp.Compile(`^/auto_[0-9]+$`)
 	if err != nil {
 		log.Panic(err)
 	}
-
 	app.HandleFuncRegexp(expr, autoRiaHandler.CarInfoHandler)
-	app.HandleFunc(bot.PhotoEvent, openCarsHandler.PhotoHandler)
 
-	// Handler for "/plates" keyword.
-	// Usage: /plates AA1234XX.
+	app.HandleFunc("/follow", autoRiaHandler.FollowHandler)
+	app.HandleFunc("/stop", autoRiaHandler.StopHandler)
 	app.HandleFunc("/plates", openCarsHandler.PlatesHandler)
-
-	// Handler for "/vin" keyword.
-	// Usage: /vin X0X0XXXXXXX0000X0.
 	app.HandleFunc("/vin", openCarsHandler.NotImplemented)
 
+	app.HandlePhoto(openCarsHandler.PhotoHandler)
+
+	log.Println("Listening on port", port)
 	if err := app.Listen(host, port); err != nil {
 		log.Panic(err)
 	}
