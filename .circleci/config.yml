@@ -36,7 +36,9 @@ jobs:
 
       - run:
           name: Build Project Binary
-          command: "go build cmd/bot/bot.go"
+          command: |
+            go build cmd/bot/bot.go
+            go build cmd/monitor/main.go
   release:
     docker:
       - image: circleci/golang:1.11
