@@ -5,24 +5,15 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"html/template"
 	"os"
-	"sort"
-	"text/template"
 	"time"
 
-	"github.com/go-telegram-bot-api/telegram-bot-api"
-
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/opencars/bot/pkg/gov"
+
+	"github.com/opencars/bot/pkg/monitor"
 )
-
-// Sorter sorts array by LastModified field.
-type Sorter []gov.Resource
-
-func (e Sorter) Len() int      { return len(e) }
-func (e Sorter) Swap(i, j int) { e[i], e[j] = e[j], e[i] }
-func (e Sorter) Less(i, j int) bool {
-	return e[i].LastModified.Before(e[j].LastModified.Time)
-}
 
 var (
 	pkg    = flag.String("package", "", "Package ID on https://data.gov.ua")
@@ -30,79 +21,6 @@ var (
 	token  = flag.String("token", "", "Telegram bot token")
 	period = flag.Duration("period", 10*time.Minute, "")
 )
-
-// Monitor is responsible from monitoring government data registry.
-type Monitor struct {
-	timestamp gov.Time
-	client    *gov.Client
-	bot       *tgbotapi.BotAPI
-}
-
-// New creates new instance of Monitor.
-func New() (*Monitor, error) {
-	bot, err := tgbotapi.NewBotAPI(*token)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Monitor{
-		// Month ago.
-		timestamp: gov.Time{Time: time.Now().Add(- 730 * time.Hour)},
-		client:    gov.NewClient(),
-		bot:       bot,
-	}, nil
-}
-
-func (monitor *Monitor) notify(pkg *gov.Package) error {
-	tpl, err := template.ParseFiles("templates/monitor.tpl")
-	if err != nil {
-		return err
-	}
-
-	buff := bytes.Buffer{}
-	if err := tpl.Execute(&buff, struct {
-		Package  string
-		Resource gov.Resource
-	}{
-		pkg.Title, pkg.Resources[len(pkg.Resources)-1],
-	}); err != nil {
-		return err
-	}
-
-	msg := tgbotapi.NewMessage(*user, buff.String())
-	msg.ParseMode = tgbotapi.ModeHTML
-
-	_, err = monitor.bot.Send(msg)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (monitor *Monitor) check() error {
-	res, err := monitor.client.Package(*pkg)
-	if err != nil {
-		return err
-	}
-
-	// Sort by modification time.
-	sort.Sort(Sorter(res.Resources))
-	resource := res.Resources[len(res.Resources)-1]
-
-	if resource.LastModified.After(monitor.timestamp.Time) {
-		fmt.Println("Package was modified!")
-
-		// Update latest timestamp.
-		monitor.timestamp = resource.LastModified
-
-		err := monitor.notify(res)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
 
 func validate() error {
 	if *pkg == "" {
@@ -120,26 +38,82 @@ func validate() error {
 	return nil
 }
 
+type Notifier struct {
+	bot *tgbotapi.BotAPI
+	tpl *template.Template
+}
+
+func NewNotifier() (*Notifier, error) {
+	bot, err := tgbotapi.NewBotAPI(*token)
+	if err != nil {
+		return nil, err
+	}
+
+	tpl, err := template.ParseFiles("templates/monitor.tpl")
+	if err != nil {
+		return nil, err
+	}
+
+	return &Notifier{
+		bot: bot,
+		tpl: tpl,
+	}, nil
+}
+
+func (n *Notifier) notify(pkg *gov.Package) error {
+	buff := bytes.Buffer{}
+	if err := n.tpl.Execute(&buff, struct {
+		Package  string
+		Resource gov.Resource
+	}{
+		pkg.Title, pkg.Resources[len(pkg.Resources)-1],
+	}); err != nil {
+		return err
+	}
+
+	msg := tgbotapi.NewMessage(*user, buff.String())
+	msg.ParseMode = tgbotapi.ModeHTML
+
+	if _, err := n.bot.Send(msg); err != nil {
+		return err
+	}
+	return nil
+}
+
 func main() {
 	flag.Parse()
+
+	telegram, err := NewNotifier()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
+	}
 
 	if err := validate(); err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
 	}
 
-	monitor, err := New()
+	m, err := monitor.New(*pkg, *user, gov.NewClient())
 	if err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
 	}
 
-	for {
-		err := monitor.check()
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "Error skipped!", err)
-			continue
-		}
+	go func() {
+		for event := range m.Events {
+			fmt.Println("Package was modified!")
+			if err := telegram.notify(event); err != nil {
+				fmt.Fprintln(os.Stderr, "Error skipped!", err)
+				continue
+			}
 
-		<-time.After(*period)
+			<-time.After(*period)
+		}
+	}()
+
+	if err := m.Listen(); err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
 	}
 }

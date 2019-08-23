@@ -2,8 +2,10 @@ package gov
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
+	"net/url"
+	"path"
+	"sort"
 	"time"
 )
 
@@ -37,11 +39,16 @@ func NewClient() *Client {
 	return api
 }
 
-func (c *Client) get(path string) (*Response, error) {
-	// TODO: Replace this with url builder, aka url.Url{}, url.String().
-	url := fmt.Sprintf("%s/%s", BaseHost, path)
+func (c *Client) get(endpoint string, values url.Values) (*Response, error) {
+	u, err := url.Parse(BaseHost)
+	if err != nil {
+		return nil, err
+	}
 
-	raw, err := c.http.Get(url)
+	u.Path = path.Join(path.Join(u.Path, BasePath), endpoint)
+	u.RawQuery = values.Encode()
+
+	raw, err := c.http.Get(u.String())
 	if err != nil {
 		return nil, err
 	}
@@ -57,9 +64,9 @@ func (c *Client) get(path string) (*Response, error) {
 // Package returns detailed information about package from government registry.
 // Makes a simple HTTP Get request under the hood.
 func (c *Client) Package(id string) (*Package, error) {
-	// TODO: Replace this with path builder, aka path.Join(...)
-	path := fmt.Sprintf("%s/package_show?id=%s", DefaultBasePath, id)
-	res, err := c.get(path)
+	res, err := c.get("package_show", url.Values{
+		"id": {id},
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -69,6 +76,9 @@ func (c *Client) Package(id string) (*Package, error) {
 	if err := json.Unmarshal(res.Result, pkg); err != nil {
 		return nil, err
 	}
+
+	// Sort by modification time.
+	sort.Sort(Sorter(pkg.Resources))
 
 	return pkg, nil
 }
