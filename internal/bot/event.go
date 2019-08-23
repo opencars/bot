@@ -1,6 +1,6 @@
 package bot
 
-import "github.com/go-telegram-bot-api/telegram-bot-api"
+import tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 
 //
 type Event struct {
