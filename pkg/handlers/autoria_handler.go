@@ -12,10 +12,9 @@ import (
 	"github.com/opencars/bot/internal/subscription"
 	"github.com/opencars/bot/pkg/autoria"
 	"github.com/opencars/bot/pkg/env"
-	"github.com/opencars/bot/pkg/openalpr"
-
 	"github.com/opencars/bot/pkg/match"
-	"github.com/opencars/toolkit/sdk"
+	"github.com/opencars/bot/pkg/openalpr"
+	"github.com/opencars/toolkit"
 )
 
 const (
@@ -25,7 +24,7 @@ const (
 type AutoRiaHandler struct {
 	API           *autoria.API
 	Recognizer    *openalpr.API
-	Storage       *sdk.Client
+	Storage       *toolkit.Client
 	Subscriptions map[int64]*subscription.Subscription
 	FilePath      string
 }
@@ -202,7 +201,7 @@ func (h AutoRiaHandler) CarInfoHandler(msg *bot.Event) {
 		return
 	}
 
-	transport, err := h.Storage.SearchLimit(plate, 5)
+	operations, err := h.Storage.Operations(plate, 5)
 	if err != nil {
 		log.Println(err)
 		return
@@ -216,10 +215,10 @@ func (h AutoRiaHandler) CarInfoHandler(msg *bot.Event) {
 
 	buff := bytes.Buffer{}
 	if err := tpl.Execute(&buff, struct {
-		Cars   []sdk.Operation
-		Number string
+		Operations []toolkit.Operation
+		Number     string
 	}{
-		transport, plate,
+		operations, plate,
 	}); err != nil {
 		log.Println(err)
 		return

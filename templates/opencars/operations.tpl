@@ -1,7 +1,7 @@
-{{ if len .Cars }}
-Реєстрації транспортних засобів за номером <b>{{ .Number }}</b> — {{ len .Cars }}
+{{ if len .Operations }}
+Реєстрації транспортних засобів за номером <b>{{ .Number }}</b> — {{ len .Operations }}
 
-{{ range $i, $car := .Cars -}}
+{{ range $i, $operation := .Operations -}}
 <b>Номер: </b>{{ .Number }}
 <b>Модель: </b>{{ .Brand }} {{ .Model }}
 <b>Рік випуску: </b>{{ .Year }}
@@ -11,6 +11,7 @@
 <b>Вага: </b>{{ .Weight }}
 <b>Тип авто: </b>{{ .Kind }}
 <b>Тип кузова: </b>{{ .Body }}
+<b>VIN-код: </b> {{ .VIN }}
 
 {{ end }}
 {{ else }}
