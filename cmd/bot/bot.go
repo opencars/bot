@@ -5,14 +5,13 @@ import (
 	"log"
 	"regexp"
 
-	"github.com/opencars/toolkit/sdk"
-
 	"github.com/opencars/bot/internal/bot"
 	"github.com/opencars/bot/internal/subscription"
 	"github.com/opencars/bot/pkg/autoria"
 	"github.com/opencars/bot/pkg/env"
 	"github.com/opencars/bot/pkg/handlers"
 	"github.com/opencars/bot/pkg/openalpr"
+	"github.com/opencars/toolkit"
 )
 
 func StartHandler(msg *bot.Event) {
@@ -41,12 +40,12 @@ func main() {
 	autoRiaHandler := handlers.AutoRiaHandler{
 		API:           autoria.New(autoRiaToken),
 		Recognizer:    &openalpr.API{URI: recognizerURL},
-		Storage:       sdk.New(openCarsURL),
+		Storage:       toolkit.NewSDK(openCarsURL),
 		Subscriptions: make(map[int64]*subscription.Subscription),
 	}
 
 	openCarsHandler := handlers.OpenCarsHandler{
-		OpenCars:   sdk.New(openCarsURL),
+		OpenCars:   toolkit.NewSDK(openCarsURL),
 		Recognizer: &openalpr.API{URI: recognizerURL},
 	}
 
@@ -55,6 +54,12 @@ func main() {
 		log.Panic(err)
 	}
 	app.HandleFuncRegexp(expr, openCarsHandler.PlatesHandler)
+
+	expr, err = regexp.Compile(`^\p{L}{3}\d{6}$`)
+	if err != nil {
+		log.Panic(err)
+	}
+	app.HandleFuncRegexp(expr, openCarsHandler.RegistrationHandler)
 
 	expr, err = regexp.Compile(`^/auto_[0-9]+$`)
 	if err != nil {
@@ -65,6 +70,7 @@ func main() {
 	app.HandleFunc("/follow", autoRiaHandler.FollowHandler)
 	app.HandleFunc("/stop", autoRiaHandler.StopHandler)
 	app.HandleFunc("/plates", openCarsHandler.PlatesHandler)
+	app.HandleFunc("/registration", openCarsHandler.RegistrationHandler)
 	app.HandleFunc("/vin", openCarsHandler.NotImplemented)
 
 	app.HandlePhoto(openCarsHandler.PhotoHandler)
