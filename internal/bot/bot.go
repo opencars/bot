@@ -106,7 +106,11 @@ func (bot *Bot) Listen(host, port string) error {
 	path := fmt.Sprintf("/tg/%s", bot.api.Token)
 
 	http.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
-		bytes, _ := ioutil.ReadAll(r.Body)
+		bytes, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			log.Printf("failed to parse body: %v", err)
+			return
+		}
 		r.Body.Close()
 
 		update := new(tgbotapi.Update)

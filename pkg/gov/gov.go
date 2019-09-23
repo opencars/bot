@@ -52,6 +52,7 @@ func (c *Client) get(endpoint string, values url.Values) (*Response, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer raw.Body.Close()
 
 	response := new(Response)
 	if err := json.NewDecoder(raw.Body).Decode(response); err != nil {
