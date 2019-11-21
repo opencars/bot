@@ -31,6 +31,7 @@ func main() {
 
 	recognizerURL := env.MustFetch("RECOGNIZER_URL")
 	openCarsURL := env.MustFetch("OPEN_CARS_URL")
+	authToken := env.MustFetch("OPEN_CARS_API_KEY")
 	autoRiaToken := env.MustFetch("AUTO_RIA_TOKEN")
 
 	app := bot.New()
@@ -40,12 +41,12 @@ func main() {
 	autoRiaHandler := handlers.AutoRiaHandler{
 		API:           autoria.New(autoRiaToken),
 		Recognizer:    &openalpr.API{URI: recognizerURL},
-		Storage:       toolkit.NewSDK(openCarsURL),
+		Storage:       toolkit.NewSDK(openCarsURL, authToken),
 		Subscriptions: make(map[int64]*subscription.Subscription),
 	}
 
 	openCarsHandler := handlers.OpenCarsHandler{
-		OpenCars:   toolkit.NewSDK(openCarsURL),
+		OpenCars:   toolkit.NewSDK(openCarsURL, authToken),
 		Recognizer: &openalpr.API{URI: recognizerURL},
 	}
 
