@@ -11,7 +11,6 @@ import (
 	"github.com/opencars/bot/internal/bot"
 	"github.com/opencars/bot/internal/subscription"
 	"github.com/opencars/bot/pkg/autoria"
-	"github.com/opencars/bot/pkg/env"
 	"github.com/opencars/bot/pkg/match"
 	"github.com/opencars/bot/pkg/openalpr"
 	"github.com/opencars/toolkit"
@@ -23,6 +22,8 @@ const (
 
 type AutoRiaHandler struct {
 	API           *autoria.API
+	ApiKey        string
+	Period        time.Duration
 	Recognizer    *openalpr.API
 	Storage       *toolkit.Client
 	Subscriptions map[int64]*subscription.Subscription
@@ -61,16 +62,14 @@ func (h AutoRiaHandler) FollowHandler(msg *bot.Event) {
 
 	// Create subscription, if it was not created.
 	if _, ok := h.Subscriptions[msg.Message.Chat.ID]; !ok {
-		h.Subscriptions[msg.Message.Chat.ID] = subscription.New()
+		h.Subscriptions[msg.Message.Chat.ID] = subscription.New(h.Period)
 	}
 
-	h.Subscriptions[msg.Message.Chat.ID].Start(func(quitter chan struct{}) {
+	h.Subscriptions[msg.Message.Chat.ID].Start(func() {
 		search, err := h.API.SearchCars(values)
 
 		if err != nil {
-			if err := msg.Send(err.Error()); err != nil {
-				log.Printf("send error: %s\n", err.Error())
-			}
+			log.Printf("Failed to search cars: %s\n", err)
 			return
 		}
 
@@ -86,11 +85,10 @@ func (h AutoRiaHandler) FollowHandler(msg *bot.Event) {
 		h.Subscriptions[msg.Message.Chat.ID].Cars = search.Result.SearchResult.Cars
 
 		newCars := make([]autoria.CarInfo, len(newCarIDs))
-
 		for i, ID := range newCarIDs {
 			car, err := h.API.CarInfo(ID)
 			if err != nil {
-				log.Println(err)
+				log.Printf("Failed to get car info: %s\n", err)
 				return
 			}
 
@@ -99,12 +97,14 @@ func (h AutoRiaHandler) FollowHandler(msg *bot.Event) {
 
 		tpl, err := template.ParseFiles("templates/message.tpl")
 		if err != nil {
-			log.Println(err)
+			log.Printf("Failed to parse template: %s\n", err)
+			return
 		}
 
 		buff := bytes.Buffer{}
 		if err := tpl.Execute(&buff, newCars); err != nil {
-			log.Println(err)
+			log.Printf("Failed to execute template: %s\n", err)
+			return
 		}
 
 		bot.WebPagePreview = false
@@ -112,13 +112,7 @@ func (h AutoRiaHandler) FollowHandler(msg *bot.Event) {
 			log.Printf("send error: %s", err.Error())
 		}
 		bot.WebPagePreview = true
-
-		time.Sleep(time.Hour)
 	})
-
-	// TODO: Save changes to file with data.
-	// Add new subscription to data file.
-	//api.UpdateData()
 }
 
 func (h AutoRiaHandler) StopHandler(msg *bot.Event) {
@@ -134,9 +128,12 @@ func (h AutoRiaHandler) StopHandler(msg *bot.Event) {
 	}
 
 	h.Subscriptions[msg.Message.Chat.ID].Stop()
+
+	if err := msg.Send("Підписка призупинена ✅"); err != nil {
+		log.Printf("send error: %s", err.Error())
+	}
 }
 
-//
 func (h AutoRiaHandler) AnalyzePhotos(photos []autoria.Photo) string {
 	bestMatch := ""
 
@@ -182,9 +179,8 @@ func (h AutoRiaHandler) CarInfoHandler(msg *bot.Event) {
 		return
 	}
 
-	autoRiaToken := env.MustFetch("AUTO_RIA_TOKEN")
-	autoRia := autoria.New(autoRiaToken)
-	resp, err := autoRia.CarPhotos(lexemes[1])
+	autoriaAPI := autoria.New(h.ApiKey)
+	resp, err := autoriaAPI.CarPhotos(lexemes[1])
 
 	if err != nil {
 		if err := msg.Send("Неправильний ідентифікатор 🙄️"); err != nil {

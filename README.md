@@ -11,17 +11,17 @@
 List of supported environment variables
 
 | Name             | Description        |
-|------------------|--------------------|
+| ---------------- | ------------------ |
 | `HOST`           | Web server host    |
 | `PORT`           | Web server port    |
 | `TELEGRAM_TOKEN` | Telegram API token |
 | `AUTO_RIA_TOKEN` | AutoRia API token  |
 | `RECOGNIZER_URL` | Plates recognizer  |
-| `DATA_PATH`      | Path to data file  |
 
 ## Development
 
 Prerequisites:
+
 - [Ngrok](https://ngrok.com/).
 
 Expose your local web server for receiving http requests
@@ -39,7 +39,7 @@ $ export HOST=<host>
 You can run the bot with command below
 
 ```sh
-$ PORT=80 go run cmd/bot/bot.go
+$ PORT=80 go run cmd/bot/main.go
 ```
 
 ## License

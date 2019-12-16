@@ -1,19 +1,23 @@
 // Package subscription implements user subscription.
 package subscription
 
+import "time"
+
 // Subscription represents user subscription to car search.
 type Subscription struct {
-	Cars    []string `json:"cars"`
-	Active  bool     `json:"active"`
+	Cars    []string
+	Active  bool
+	period  time.Duration
 	quitter chan struct{}
 }
 
 // New creates new clean Subscription.
-func New() *Subscription {
+func New(period time.Duration) *Subscription {
 	return &Subscription{
 		Cars:    make([]string, 0),
 		quitter: make(chan struct{}),
 		Active:  false,
+		period:  period,
 	}
 }
 
@@ -30,22 +34,23 @@ func (sub *Subscription) Stop() {
 }
 
 // Start initializes a new goroutine for current subscription with specified callback.
-func (sub *Subscription) Start(callback func(chan struct{})) {
+func (sub *Subscription) Start(callback func()) {
 	if sub.Active {
 		close(sub.quitter)
 		sub.quitter = make(chan struct{})
 	}
 
-	go func(quit chan struct{}) {
+	go func() {
 		for {
 			select {
-			case <-quit:
+			case <-sub.quitter:
 				return
 			default:
-				callback(sub.quitter)
+				callback()
+				<-time.After(sub.period)
 			}
 		}
-	}(sub.quitter)
+	}()
 
 	sub.Active = true
 }

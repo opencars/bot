@@ -37,7 +37,7 @@ jobs:
       - run:
           name: Build Project Binary
           command: |
-            go build cmd/bot/bot.go
+            go build cmd/bot/main.go
             go build cmd/monitor/main.go
   release:
     docker:
