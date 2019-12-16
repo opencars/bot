@@ -3,6 +3,7 @@ module github.com/opencars/bot
 go 1.13
 
 require (
+	github.com/BurntSushi/toml v0.3.1
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/opencars/toolkit v0.0.7
 	github.com/stretchr/testify v1.3.0

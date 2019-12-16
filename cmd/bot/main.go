@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"regexp"
@@ -8,6 +9,7 @@ import (
 	"github.com/opencars/bot/internal/bot"
 	"github.com/opencars/bot/internal/subscription"
 	"github.com/opencars/bot/pkg/autoria"
+	"github.com/opencars/bot/pkg/config"
 	"github.com/opencars/bot/pkg/env"
 	"github.com/opencars/bot/pkg/handlers"
 	"github.com/opencars/bot/pkg/openalpr"
@@ -26,20 +28,32 @@ func StartHandler(msg *bot.Event) {
 }
 
 func main() {
+	var configPath string
+
+	flag.StringVar(&configPath, "config", "config/config.toml", "Path to the application configuration file")
+
+	flag.Parse()
+
+	conf, err := config.New(configPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	port := env.Fetch("PORT", "8080")
 	host := env.MustFetch("HOST")
 
 	recognizerURL := env.MustFetch("RECOGNIZER_URL")
 	openCarsURL := env.MustFetch("OPEN_CARS_URL")
 	authToken := env.MustFetch("OPEN_CARS_API_KEY")
-	autoRiaToken := env.MustFetch("AUTO_RIA_TOKEN")
 
 	app := bot.New()
 
 	app.HandleFunc("/start", StartHandler)
 
 	autoRiaHandler := handlers.AutoRiaHandler{
-		API:           autoria.New(autoRiaToken),
+		API:           autoria.New(conf.AutoRia.ApiKey),
+		Period:        conf.AutoRia.Period.Duration,
+		ApiKey:        conf.AutoRia.ApiKey,
 		Recognizer:    &openalpr.API{URI: recognizerURL},
 		Storage:       toolkit.NewSDK(openCarsURL, authToken),
 		Subscriptions: make(map[int64]*subscription.Subscription),
