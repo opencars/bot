@@ -76,6 +76,12 @@ func (h AutoRiaHandler) FollowHandler(msg *bot.Event) {
 
 		// Fetch list of new cars.
 		newCarIDs := h.Subscriptions[msg.Message.Chat.ID].NewCars(search.Result.SearchResult.Cars)
+
+		// Skip, if newCarIDs is empty.
+		if len(newCarIDs) == 0 {
+			return
+		}
+
 		// Store latest result.
 		h.Subscriptions[msg.Message.Chat.ID].Cars = search.Result.SearchResult.Cars
 
