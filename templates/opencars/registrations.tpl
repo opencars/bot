@@ -1,22 +1,30 @@
-{{ if len .Registrations }}
 {{ range $i, $registration := .Registrations -}}
-<b>Номер свідоцтва: </b>{{ .Code }}
-
-<b>Реєстраційний номер: </b>{{ .Number }}
-<b>Дата першої реєстрації: </b>{{ .FirstReg }}
-<b>Дата реєстрації: </b>{{ .Date }}
-<b>Рік випуску: </b>{{ .Year }}
+<b>Номер: </b>{{ .NRegNew }}
+<b>Номер документа: </b>{{ .SDoc }}{{ .NDoc }}
 <b>Марка: </b>{{ .Brand }}
 <b>Модель: </b>{{ .Model }}
-<b>Тип: </b>{{ .Kind }}
-<b>Маса без навантаження: </b>{{ .OwnWeight }}
-<b>Категорія: </b>{{ .Category }}
-<b>Об'єм двигуна: </b>{{ .Capacity }}
-<b>Тип палива: </b>{{ .Fuel }}
+<b>VIN: </b> {{ .VIN }}
 <b>Колір: </b>{{ .Color }}
-<b>VIN-код: </b> {{ .VIN }}
+<b>Тип: </b>{{ .Kind }}
+<b>Рік випуску: </b>{{ .MakeYear }}
+<b>Повна маса: </b>{{ .TotalWeight }}
+<b>Маса без навантаження: </b>{{ .OwnWeight }}
+{{- if .Capacity }}
+<b>Об'єм двигуна: </b>{{ .Capacity }}
+{{- end }}
+{{- if .Fuel }}<b>
+Тип пального: </b>{{ .Fuel }}
+{{- end }}
+<b>Категорія: </b>{{ .RankCategory }}
+{{- if .NStanding }}
+<b>Кількість стоячих місць: </b>{{ .NStanding }}
+{{- end }}
+{{- if .NSeating }}
+<b>Кількість сидячих місць: </b>{{ .NSeating }}
+{{- end }}
+<b>Дата першої реєстрації: </b>{{ .DFirstReg }}
+<b>Дата реєстрації: </b>{{ .DReg }}
 
-{{ end }}
 {{ else }}
-Дані за номером {{ .Code }} не знайдені.
+Дані за номером свідоцтва <b>{{ .SDoc }}{{ .NDoc }}</b> не знайдені.
 {{ end }}

@@ -19,8 +19,6 @@ func (h OpenCarsHandler) PhotoHandler(msg *bot.Event) {
 		log.Printf("action error: %s", err.Error())
 	}
 
-	// TODO: Validate that photo size is big enough.
-
 	if len(photos) < 1 {
 		somethingWentWrong(msg)
 		return
@@ -37,7 +35,7 @@ func (h OpenCarsHandler) PhotoHandler(msg *bot.Event) {
 	log.Printf("Photo: %s\n", url)
 
 	// Send received photo to be recognized.
-	image, err := h.Recognizer.Recognize(url)
+	image, err := h.recognizer.Recognize(url)
 	if err != nil {
 		somethingWentWrong(msg)
 		log.Println(err.Error())

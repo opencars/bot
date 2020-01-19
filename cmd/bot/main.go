@@ -6,6 +6,8 @@ import (
 	"log"
 	"regexp"
 
+	"github.com/opencars/toolkit"
+
 	"github.com/opencars/bot/internal/bot"
 	"github.com/opencars/bot/internal/subscription"
 	"github.com/opencars/bot/pkg/autoria"
@@ -13,7 +15,6 @@ import (
 	"github.com/opencars/bot/pkg/env"
 	"github.com/opencars/bot/pkg/handlers"
 	"github.com/opencars/bot/pkg/openalpr"
-	"github.com/opencars/toolkit"
 )
 
 func StartHandler(msg *bot.Event) {
@@ -55,14 +56,14 @@ func main() {
 		Period:        conf.AutoRia.Period.Duration,
 		ApiKey:        conf.AutoRia.ApiKey,
 		Recognizer:    &openalpr.API{URI: recognizerURL},
-		Storage:       toolkit.NewSDK(openCarsURL, authToken),
+		Toolkit:       toolkit.New(openCarsURL, authToken),
 		Subscriptions: make(map[int64]*subscription.Subscription),
 	}
 
-	openCarsHandler := handlers.OpenCarsHandler{
-		OpenCars:   toolkit.NewSDK(openCarsURL, authToken),
-		Recognizer: &openalpr.API{URI: recognizerURL},
-	}
+	openCarsHandler := handlers.NewOpenCarsHandler(
+		toolkit.New(openCarsURL, authToken),
+		&openalpr.API{URI: recognizerURL},
+	)
 
 	expr, err := regexp.Compile(`^\p{L}{2}\d{4}\p{L}{2}$`)
 	if err != nil {

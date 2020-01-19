@@ -10,12 +10,19 @@ import (
 )
 
 type OpenCarsHandler struct {
-	OpenCars   *toolkit.Client
-	Recognizer *openalpr.API
+	client     *toolkit.Client
+	recognizer *openalpr.API
+}
+
+func NewOpenCarsHandler(client *toolkit.Client, recognizer *openalpr.API) *OpenCarsHandler {
+	return &OpenCarsHandler{
+		client:     client,
+		recognizer: recognizer,
+	}
 }
 
 func (h OpenCarsHandler) getInfoByPlates(number string) (string, error) {
-	operations, err := h.OpenCars.Operations(number, 5)
+	operations, err := h.client.Operation().FindByNumber(number)
 	if err != nil {
 		return "", err
 	}
@@ -39,8 +46,8 @@ func (h OpenCarsHandler) getInfoByPlates(number string) (string, error) {
 	return buff.String(), nil
 }
 
-func (h OpenCarsHandler) getRegistrations(code string) (string, error) {
-	registrations, err := h.OpenCars.Registrations(code)
+func (h OpenCarsHandler) getRegistrations(number string) (string, error) {
+	registration, err := h.client.Registration().FindByNumber(number)
 	if err != nil {
 		return "", err
 	}
@@ -53,12 +60,12 @@ func (h OpenCarsHandler) getRegistrations(code string) (string, error) {
 	buff := bytes.Buffer{}
 	if err := tpl.Execute(&buff, struct {
 		Registrations []toolkit.Registration
-		Code          string
+		Number        string
 	}{
-		registrations,
-		code,
+		registration,
+		number,
 	}); err != nil {
-		log.Println(err)
+		return "", err
 	}
 
 	return buff.String(), nil
