@@ -62,7 +62,7 @@ func (h OpenCarsHandler) PhotoHandler(msg *bot.Event) {
 		log.Printf("send error: %s\n", err.Error())
 	}
 
-	text, err := h.getInfoByPlates(plates[0])
+	text, err := h.getInfoByNumber(plates[0])
 	if err != nil {
 		log.Println(err.Error())
 	}

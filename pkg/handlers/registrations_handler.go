@@ -21,7 +21,7 @@ func (h OpenCarsHandler) RegistrationHandler(msg *bot.Event) {
 		return
 	}
 
-	text, err := h.getRegistrations(code)
+	text, err := h.getRegistrationsByNumber(code)
 	if err != nil {
 		log.Println(err.Error())
 	}

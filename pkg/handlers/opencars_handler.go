@@ -21,7 +21,7 @@ func NewOpenCarsHandler(client *toolkit.Client, recognizer *openalpr.API) *OpenC
 	}
 }
 
-func (h OpenCarsHandler) getInfoByPlates(number string) (string, error) {
+func (h OpenCarsHandler) getInfoByNumber(number string) (string, error) {
 	operations, err := h.client.Operation().FindByNumber(number)
 	if err != nil {
 		return "", err
@@ -46,7 +46,7 @@ func (h OpenCarsHandler) getInfoByPlates(number string) (string, error) {
 	return buff.String(), nil
 }
 
-func (h OpenCarsHandler) getRegistrations(number string) (string, error) {
+func (h OpenCarsHandler) getRegistrationsByNumber(number string) (string, error) {
 	registration, err := h.client.Registration().FindByNumber(number)
 	if err != nil {
 		return "", err
@@ -64,6 +64,42 @@ func (h OpenCarsHandler) getRegistrations(number string) (string, error) {
 	}{
 		registration,
 		number,
+	}); err != nil {
+		return "", err
+	}
+
+	return buff.String(), nil
+}
+
+func (h *OpenCarsHandler) GetReportByVIN(vin string) (string, error) {
+	registrations, err := h.client.Registration().FindByVIN(vin)
+	if err != nil {
+		return "", err
+	}
+
+	if len(registrations) == 0 {
+		return "Нажаль, не знайшли такого VIN", nil
+	}
+
+	operations, err := h.client.Operation().FindByNumber(registrations[0].NRegNew)
+	if err != nil {
+		return "", err
+	}
+
+	tpl, err := template.ParseFiles("templates/report_by_vin.tpl")
+	if err != nil {
+		return "", err
+	}
+
+	buff := bytes.Buffer{}
+	if err := tpl.Execute(&buff, struct {
+		Registration toolkit.Registration
+		Operations   []toolkit.Operation
+		VIN          string
+	}{
+		Registration: registrations[0],
+		Operations:   operations,
+		VIN:          vin,
 	}); err != nil {
 		return "", err
 	}

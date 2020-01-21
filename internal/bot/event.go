@@ -1,14 +1,16 @@
 package bot
 
-import tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+import (
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+)
 
-//
+// Event ...
 type Event struct {
 	API     *tgbotapi.BotAPI
 	Message *tgbotapi.Message
 }
 
-//
+// Handler ...
 type Handler interface {
 	Handle(msg *Event)
 }
@@ -22,12 +24,12 @@ func (event *Event) send(message tgbotapi.MessageConfig) error {
 	return nil
 }
 
-//
+// Send ...
 func (event *Event) Send(text string) error {
 	return event.send(tgbotapi.NewMessage(event.Message.Chat.ID, text))
 }
 
-//
+// SetStatus ...
 func (event *Event) SetStatus(status string) error {
 	action := tgbotapi.NewChatAction(event.Message.Chat.ID, status)
 	if _, err := event.API.Send(action); err != nil {

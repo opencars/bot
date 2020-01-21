@@ -60,7 +60,11 @@ func (bot *Bot) HandleRegexp(regexp *regexp.Regexp, handler Handler) {
 }
 
 // HandleFuncRegexp registers handler function by regular expression.
-func (bot *Bot) HandleFuncRegexp(regexp *regexp.Regexp, handler func(*Event)) {
+func (bot *Bot) HandleFuncRegexp(expr string, handler func(*Event)) {
+	regexp, err := regexp.Compile(expr)
+	if err != nil {
+		panic(err)
+	}
 	bot.HandleRegexp(regexp, HandlerFunc(handler))
 }
 
