@@ -37,17 +37,18 @@ func main() {
 		API:           autoria.New(conf.AutoRia.ApiKey),
 		Period:        conf.AutoRia.Period.Duration,
 		ApiKey:        conf.AutoRia.ApiKey,
-		Recognizer:    &openalpr.API{URI: recognizerURL},
+		Recognizer:    openalpr.New(recognizerURL),
 		Toolkit:       toolkit.New(openCarsURL, authToken),
 		Subscriptions: make(map[int64]*subscription.Subscription),
 	}
 
 	openCarsHandler := handlers.NewOpenCarsHandler(
 		toolkit.New(openCarsURL, authToken),
-		&openalpr.API{URI: recognizerURL},
+		openalpr.New(recognizerURL),
 	)
 
 	app := bot.New()
+
 	app.HandleFuncRegexp(`^\p{L}{2}\d{4}\p{L}{2}$`, openCarsHandler.PlatesHandler)
 	app.HandleFuncRegexp(`^\p{L}{3}\d{6}$`, openCarsHandler.RegistrationHandler)
 	app.HandleFuncRegexp(`^/auto_[0-9]+$`, autoRiaHandler.CarInfoHandler)

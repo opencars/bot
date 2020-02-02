@@ -13,7 +13,10 @@ func (h OpenCarsHandler) PlatesHandler(msg *bot.Event) {
 		log.Printf("action error: %s", err)
 	}
 
-	number := strings.TrimSpace(strings.TrimPrefix(msg.Message.Text, "/number"))
+	number := strings.TrimPrefix(msg.Message.Text, "/number")
+	number = strings.TrimSpace(number)
+	number = strings.ToUpper(number)
+
 	if number == "" {
 		if err := msg.SendHTML("Номер відсутній"); err != nil {
 			log.Printf("send error: %s\n", err)

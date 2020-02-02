@@ -27,7 +27,7 @@ func (h OpenCarsHandler) getInfoByNumber(number string) (string, error) {
 		return "", err
 	}
 
-	tpl, err := template.ParseFiles("templates/opencars/operations.tpl")
+	tpl, err := template.ParseFiles("templates/operations.tpl")
 	if err != nil {
 		return "", err
 	}
@@ -52,7 +52,7 @@ func (h OpenCarsHandler) getRegistrationsByNumber(number string) (string, error)
 		return "", err
 	}
 
-	tpl, err := template.ParseFiles("templates/opencars/registrations.tpl")
+	tpl, err := template.ParseFiles("templates/registrations.tpl")
 	if err != nil {
 		return "", err
 	}

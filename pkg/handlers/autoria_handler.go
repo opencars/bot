@@ -8,13 +8,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/opencars/toolkit"
-
 	"github.com/opencars/bot/internal/bot"
 	"github.com/opencars/bot/internal/subscription"
 	"github.com/opencars/bot/pkg/autoria"
 	"github.com/opencars/bot/pkg/match"
 	"github.com/opencars/bot/pkg/openalpr"
+	"github.com/opencars/toolkit"
 )
 
 const (
@@ -28,7 +27,6 @@ type AutoRiaHandler struct {
 	Recognizer    *openalpr.API
 	Toolkit       *toolkit.Client
 	Subscriptions map[int64]*subscription.Subscription
-	FilePath      string
 }
 
 func (h AutoRiaHandler) FollowHandler(msg *bot.Event) {

@@ -12,7 +12,9 @@ func (h OpenCarsHandler) RegistrationHandler(msg *bot.Event) {
 		log.Printf("action error: %s", err.Error())
 	}
 
-	code := strings.TrimSpace(strings.TrimPrefix(msg.Message.Text, "/registration"))
+	code := strings.TrimPrefix(msg.Message.Text, "/registration")
+	code = strings.TrimSpace(code)
+	code = strings.ToUpper(code)
 
 	if code == "" {
 		if err := msg.SendHTML("Номер відсутній"); err != nil {
