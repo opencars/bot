@@ -43,7 +43,7 @@ func TestAPI_Recognize(t *testing.T) {
 
 	t.Run("invalid response body", func(t *testing.T) {
 		_, err := New(okServer.URL).Recognize("http://localhost:1234")
-		assert.EqualError(t, err, "invalid response body")
+		assert.Contains(t, err.Error(), "invalid response body")
 	})
 
 	t.Run("everything is valid", func(t *testing.T) {

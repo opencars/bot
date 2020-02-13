@@ -3,7 +3,7 @@
 
 {{ range $i, $operation := .Operations -}}
 <b>Номер: </b>{{ .Number }}
-<b>Марка: </b>{{ .Make }}
+<b>Марка: </b>{{ .Brand }}
 <b>Модель: </b>{{ .Model }}
 <b>Колір: </b>{{ .Color }}
 <b>Тип: </b>{{ .Kind }} {{ .Body }}
@@ -17,11 +17,7 @@
 <b>Тип пального: </b>{{ .Fuel }}
 {{ end -}}
 <b>Дата реєстрації: </b>{{ .Date }}
-{{ if eq .Person "P" -}}
-<b>Власник: </b>Фізична особа
-{{- else if eq .Person "J" -}}
-<b>Власник: </b>Юридична особа
-{{ end }}
+<b>Власник: </b>{{ .Person }}
 
 {{ end }}
 {{ else }}

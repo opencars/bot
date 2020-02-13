@@ -3,14 +3,21 @@
 
 {{ range $i, $operation := .Operations -}}
 <b>Номер: </b>{{ .Number }}
-<b>Модель: </b>{{ .Brand }} {{ .Model }}
-<b>Рік випуску: </b>{{ .Year }}
-<b>Дата: </b>{{ .Date }}
+<b>Марка: </b>{{ .Brand }}
+<b>Модель: </b>{{ .Model }}
 <b>Колір: </b>{{ .Color }}
+<b>Тип: </b>{{ .Kind }} {{ .Body }}
+<b>Рік випуску: </b>{{ .Year }}
+<b>Повна маса: </b>{{ .TotalWeight }}
+<b>Маса без навантаження: </b>{{ .OwnWeight }}
+{{ if .Capacity -}}
 <b>Об'єм двигуна: </b>{{ .Capacity }}
-<b>Вага: </b>{{ .Weight }}
-<b>Тип авто: </b>{{ .Kind }}
-<b>Тип кузова: </b>{{ .Body }}
+{{ end -}}
+{{ if .Fuel -}}
+<b>Тип пального: </b>{{ .Fuel }}
+{{ end -}}
+<b>Дата реєстрації: </b>{{ .Date }}
+<b>Власник: </b>{{ .Person }}
 
 {{ end }}
 {{ else }}

@@ -63,7 +63,7 @@ func (api *API) Recognize(uri string) (*Image, error) {
 
 	img := Image{}
 	if err := json.NewDecoder(resp.Body).Decode(&img); err != nil {
-		return nil, errors.New("invalid response body")
+		return nil, fmt.Errorf("invalid response body: %w", err)
 	}
 
 	return &img, nil
