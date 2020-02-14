@@ -1,13 +1,13 @@
 Пошук інформації за <b>{{ .Registration.VIN }}</b>
 
-<b>Номер: </b>{{ .Registration.NRegNew }}
-<b>Номер документа: </b>{{ .Registration.SDoc }}{{ .Registration.NDoc }}
+<b>Номер: </b>{{ .Registration.Number }}
+<b>Номер документа: </b>{{ .Registration.Code }}
 <b>Марка: </b>{{ .Registration.Brand }}
 <b>Модель: </b>{{ .Registration.Model }}
 <b>VIN: </b> {{ .Registration.VIN }}
 <b>Колір: </b>{{ .Registration.Color }}
 <b>Тип: </b>{{ .Registration.Kind }}
-<b>Рік випуску: </b>{{ .Registration.MakeYear }}
+<b>Рік випуску: </b>{{ .Registration.Year }}
 <b>Повна маса: </b>{{ .Registration.TotalWeight }}
 <b>Маса без навантаження: </b>{{ .Registration.OwnWeight }}
 {{- if .Registration.Capacity }}
@@ -17,14 +17,14 @@
 Тип пального: </b>{{ .Registration.Fuel }}
 {{- end }}
 <b>Категорія: </b>{{ .Registration.RankCategory }}
-{{- if .Registration.NStanding }}
-<b>Кількість стоячих місць: </b>{{ .Registration.NStanding }}
+{{- if .Registration.NumStanding }}
+<b>Кількість стоячих місць: </b>{{ .Registration.NumStanding }}
 {{- end }}
 {{- if .Registration.NSeating }}
-<b>Кількість сидячих місць: </b>{{ .Registration.NSeating }}
+<b>Кількість сидячих місць: </b>{{ .Registration.NumSeating }}
 {{- end }}
-<b>Дата першої реєстрації: </b>{{ .Registration.DFirstReg }}
-<b>Дата реєстрації: </b>{{ .Registration.DReg }}
+<b>Дата першої реєстрації: </b>{{ .Registration.FirstRegDate }}
+<b>Дата реєстрації: </b>{{ .Registration.Date }}
 
 <b>Операції</b>
 {{ if len .Operations }}

@@ -81,7 +81,7 @@ func (h *OpenCarsHandler) GetReportByVIN(vin string) (string, error) {
 		return "Нажаль, не знайшли такого VIN", nil
 	}
 
-	operations, err := h.client.Operation().FindByNumber(registrations[0].NRegNew)
+	operations, err := h.client.Operation().FindByNumber(registrations[0].Number)
 	if err != nil {
 		return "", err
 	}

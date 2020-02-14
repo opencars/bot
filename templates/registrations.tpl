@@ -1,12 +1,12 @@
 {{ range $i, $registration := .Registrations -}}
-<b>Номер: </b>{{ .NRegNew }}
-<b>Номер документа: </b>{{ .SDoc }}{{ .NDoc }}
+<b>Номер: </b>{{ .Number }}
+<b>Номер документа: </b>{{ .Code }}
 <b>Марка: </b>{{ .Brand }}
 <b>Модель: </b>{{ .Model }}
 <b>VIN: </b> {{ .VIN }}
 <b>Колір: </b>{{ .Color }}
 <b>Тип: </b>{{ .Kind }}
-<b>Рік випуску: </b>{{ .MakeYear }}
+<b>Рік випуску: </b>{{ .Year }}
 <b>Повна маса: </b>{{ .TotalWeight }}
 <b>Маса без навантаження: </b>{{ .OwnWeight }}
 {{- if .Capacity }}
@@ -16,14 +16,14 @@
 Тип пального: </b>{{ .Fuel }}
 {{- end }}
 <b>Категорія: </b>{{ .RankCategory }}
-{{- if .NStanding }}
-<b>Кількість стоячих місць: </b>{{ .NStanding }}
+{{- if .NumStanding }}
+<b>Кількість стоячих місць: </b>{{ .NumStanding }}
 {{- end }}
-{{- if .NSeating }}
-<b>Кількість сидячих місць: </b>{{ .NSeating }}
+{{- if .NumSeating }}
+<b>Кількість сидячих місць: </b>{{ .NumSeating }}
 {{- end }}
-<b>Дата першої реєстрації: </b>{{ .DFirstReg }}
-<b>Дата реєстрації: </b>{{ .DReg }}
+<b>Дата першої реєстрації: </b>{{ .FirstRegDate }}
+<b>Дата реєстрації: </b>{{ .Date }}
 
 {{ else }}
 Дані за номером <b>{{ .Number }}</b> не знайдені.
