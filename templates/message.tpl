@@ -9,5 +9,3 @@
 <b>Паливо: </b>{{ .Car.FuelName }}
 <b>Аналіз: </b>/auto_{{ .Car.AutoID }}
 <a href="{{ .LinkToView }}">Детальніше</a>
-
-{{ end }}

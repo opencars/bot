@@ -1,9 +1,10 @@
+{{ if len .Registrations }}
 {{ range $i, $registration := .Registrations -}}
-<b>Номер: </b>{{ .Number }}
-<b>Номер документа: </b>{{ .Code }}
+<b>Номер: </b><a href="https://www.opencars.app/#/number/{{ .Number }}">{{ .Number }}</a>
+<b>Номер документа: </b><a href="https://www.opencars.app/#/code/{{ .Code }}">{{ .Code }}</a>
 <b>Марка: </b>{{ .Brand }}
 <b>Модель: </b>{{ .Model }}
-<b>VIN: </b> {{ .VIN }}
+<b>VIN: </b><a href="https://www.opencars.app/#/vin/{{ .VIN }}">{{ .VIN }}</a>
 <b>Колір: </b>{{ .Color }}
 <b>Тип: </b>{{ .Kind }}
 <b>Рік випуску: </b>{{ .Year }}
@@ -24,7 +25,7 @@
 {{- end }}
 <b>Дата першої реєстрації: </b>{{ .FirstRegDate }}
 <b>Дата реєстрації: </b>{{ .Date }}
-
+{{ end }}
 {{ else }}
 Дані за номером <b>{{ .Number }}</b> не знайдені.
 {{ end }}

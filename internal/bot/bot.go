@@ -20,7 +20,7 @@ const (
 )
 
 var (
-	WebPagePreview = true
+	WebPagePreview = false
 )
 
 type HandlerFunc func(msg *Event)

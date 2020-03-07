@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"log"
 	"strings"
 
@@ -61,7 +60,6 @@ func (h OpenCarsHandler) ReportByVIN(msg *bot.Event) {
 		return
 	}
 
-	fmt.Println(vin)
 	text, err := h.GetReportByVIN(vin)
 	if err != nil {
 		log.Printf("error: %s\n", err)

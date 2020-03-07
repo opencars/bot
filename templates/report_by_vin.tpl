@@ -1,7 +1,7 @@
 Пошук інформації за <b>{{ .Registration.VIN }}</b>
 
-<b>Номер: </b>{{ .Registration.Number }}
-<b>Номер документа: </b>{{ .Registration.Code }}
+<b>Номер: </b><a href="https://www.opencars.app/#/number/{{ .Registration.Number }}">{{ .Registration.Number }}</a>
+<b>Номер документа: </b><a href="https://www.opencars.app/#/code/{{ .Registration.Code }}">{{ .Registration.Code }}</a>
 <b>Марка: </b>{{ .Registration.Brand }}
 <b>Модель: </b>{{ .Registration.Model }}
 <b>VIN: </b> {{ .Registration.VIN }}
@@ -20,7 +20,7 @@
 {{- if .Registration.NumStanding }}
 <b>Кількість стоячих місць: </b>{{ .Registration.NumStanding }}
 {{- end }}
-{{- if .Registration.NSeating }}
+{{- if .Registration.NumSeating }}
 <b>Кількість сидячих місць: </b>{{ .Registration.NumSeating }}
 {{- end }}
 <b>Дата першої реєстрації: </b>{{ .Registration.FirstRegDate }}
@@ -29,7 +29,7 @@
 <b>Операції</b>
 {{ if len .Operations }}
 {{ range $i, $operation := .Operations -}}
-<b>Номер: </b>{{ .Number }}
+<b>Номер: </b><a href="https://www.opencars.app/#/number/{{ .Number }}">{{ .Number }}</a>
 <b>Марка: </b>{{ .Brand }}
 <b>Модель: </b>{{ .Model }}
 <b>Колір: </b>{{ .Color }}

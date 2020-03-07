@@ -2,7 +2,7 @@
 Реєстрації транспортних засобів за номером <b>{{ .Number }}</b> — {{ len .Operations }}
 
 {{ range $i, $operation := .Operations -}}
-<b>Номер: </b>{{ .Number }}
+<b>Номер: </b><a href="https://www.opencars.app/#/number/{{ .Number }}">{{ .Number }}</a>
 <b>Марка: </b>{{ .Brand }}
 <b>Модель: </b>{{ .Model }}
 <b>Колір: </b>{{ .Color }}
@@ -20,6 +20,8 @@
 <b>Власник: </b>{{ .Person }}
 
 {{ end }}
+
+<a href="https://www.opencars.app/number/{{ .Number }}">Більше</a>
 {{ else }}
 Дані за номером {{ .Number }} не знайдені в реєстраційній інформації з 1 січня 2013 та транспортних ліцензіях.
 {{ end }}
