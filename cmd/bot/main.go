@@ -51,7 +51,8 @@ func main() {
 
 	app.HandleFuncRegexp(`^\p{L}{2}\d{4}\p{L}{2}$`, openCarsHandler.PlatesHandler)
 	app.HandleFuncRegexp(`^\p{L}{3}\d{6}$`, openCarsHandler.RegistrationHandler)
-	app.HandleFuncRegexp(`^/auto_[0-9]+$`, autoRiaHandler.CarInfoHandler)
+	app.HandleFuncRegexp(`^/auto_[0-9]{8}$`, autoRiaHandler.CarInfoHandler)
+	app.HandleFuncRegexp(`^https://auto.ria.com/uk/auto_(.*)_([0-9]{8}).html$`, autoRiaHandler.CarInfoHandler)
 	app.HandleFunc("/start", handlers.StartHandler)
 	app.HandleFunc("/follow", autoRiaHandler.FollowHandler)
 	app.HandleFunc("/stop", autoRiaHandler.StopHandler)

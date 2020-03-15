@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"log"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
@@ -169,17 +170,11 @@ func (h AutoRiaHandler) CarInfoHandler(msg *bot.Event) {
 		log.Printf("action error: %s", err.Error())
 	}
 
-	lexemes := strings.Split(msg.Message.Text, "_")
-
-	if len(lexemes) < 2 {
-		if err := msg.Send("Помилковий запит 😮"); err != nil {
-			log.Printf("send error: %s", err.Error())
-		}
-		return
-	}
+	pattern := regexp.MustCompile(`(.*)([0-9]{8})(.*)`)
+	id := strings.TrimSpace(pattern.ReplaceAllString(msg.Message.Text, "$2"))
 
 	autoriaAPI := autoria.New(h.ApiKey)
-	resp, err := autoriaAPI.CarPhotos(lexemes[1])
+	resp, err := autoriaAPI.CarPhotos(id)
 
 	if err != nil {
 		if err := msg.Send("Неправильний ідентифікатор 🙄️"); err != nil {
@@ -189,7 +184,7 @@ func (h AutoRiaHandler) CarInfoHandler(msg *bot.Event) {
 	}
 
 	// Get user know about waiting time.
-	text := "Аналіз може зайняти до 1 хвилини 🐌"
+	text := "Аналіз може зайняти до 5 хвилин 🐌"
 	if err := msg.Send(text); err != nil {
 		log.Printf("send error: %s\n", err.Error())
 	}
@@ -208,7 +203,7 @@ func (h AutoRiaHandler) CarInfoHandler(msg *bot.Event) {
 		return
 	}
 
-	tpl, err := template.ParseFiles("templates/car_info.tpl")
+	tpl, err := template.ParseFiles("templates/operations.tpl")
 	if err != nil {
 		log.Println(err)
 		return
@@ -227,6 +222,34 @@ func (h AutoRiaHandler) CarInfoHandler(msg *bot.Event) {
 	}
 
 	if err := msg.SendHTML(buff.String()); err != nil {
+		log.Printf("send error: %s\n", err.Error())
+	}
+
+	registrations, err := h.Toolkit.Registration().FindByNumber(plate)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	tpl2, err := template.ParseFiles("templates/registrations.tpl")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	buff2 := bytes.Buffer{}
+	if err := tpl2.Execute(&buff2, struct {
+		Registrations []toolkit.Registration
+		Number        string
+	}{
+		Registrations: registrations,
+		Number:        plate,
+	}); err != nil {
+		log.Println(err)
+		return
+	}
+
+	if err := msg.SendHTML(buff2.String()); err != nil {
 		log.Printf("send error: %s\n", err.Error())
 	}
 }
