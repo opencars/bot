@@ -35,15 +35,14 @@ func (h AutoRiaHandler) FollowHandler(msg *bot.Event) {
 		log.Printf("action error: %s", err.Error())
 	}
 
-	lexemes := strings.Split(msg.Message.Text, " ")
-	if len(lexemes) < 2 || !strings.HasPrefix(lexemes[1], "https://auto.ria.com/search") {
+	if !strings.HasPrefix(msg.Message.Text, "https://auto.ria.com/search") {
 		if err := msg.Send("Помилковий запит."); err != nil {
 			log.Printf("send error: %s\n", err.Error())
 		}
 		return
 	}
 
-	values, err := url.ParseQuery(lexemes[1])
+	values, err := url.ParseQuery(msg.Message.Text)
 	if err != nil {
 		if err := msg.Send(err.Error()); err != nil {
 			log.Printf("send error: %s\n", err.Error())
@@ -101,17 +100,23 @@ func (h AutoRiaHandler) FollowHandler(msg *bot.Event) {
 			return
 		}
 
+		res := struct {
+			Cars   []autoria.CarInfo
+			Amount int64
+		}{
+			Cars:   newCars,
+			Amount: search.Result.SearchResult.Count,
+		}
+
 		buff := bytes.Buffer{}
-		if err := tpl.Execute(&buff, newCars); err != nil {
+		if err := tpl.Execute(&buff, res); err != nil {
 			log.Printf("Failed to execute template: %s\n", err)
 			return
 		}
 
-		bot.WebPagePreview = false
 		if err := msg.SendHTML(buff.String()); err != nil {
 			log.Printf("send error: %s", err.Error())
 		}
-		bot.WebPagePreview = true
 	})
 }
 
@@ -184,8 +189,7 @@ func (h AutoRiaHandler) CarInfoHandler(msg *bot.Event) {
 	}
 
 	// Get user know about waiting time.
-	text := "Аналіз може зайняти до 5 хвилин 🐌"
-	if err := msg.Send(text); err != nil {
+	if err := msg.Send("Перевірка може зайняти до 5 хвилин 🐌"); err != nil {
 		log.Printf("send error: %s\n", err.Error())
 	}
 
