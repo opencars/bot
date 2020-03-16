@@ -23,17 +23,22 @@ type Car struct {
 	CategoryID   int    `json:"categoryId"`
 }
 
+type CheckedVIN struct {
+	VIN string `json:"vin"`
+}
 type CarInfo struct {
-	LocationCityName string `json:"locationCityName"`
-	MarkName         string `json:"markName"`
-	MarkID           uint32 `json:"markId"`
-	ModelName        string `json:"modelName"`
-	ModelID          uint32 `json:"modelId"`
-	LinkToView       string `json:"linkToView"`
-	PriceUSD         int64  `json:"USD"`
-	PriceHRN         int64  `json:"UAH"`
-	PriceEUR         int64  `json:"EUR"`
-	Car              Car    `json:"autoData"`
+	LocationCityName string      `json:"locationCityName"`
+	MarkName         string      `json:"markName"`
+	MarkID           uint32      `json:"markId"`
+	ModelName        string      `json:"modelName"`
+	ModelID          uint32      `json:"modelId"`
+	LinkToView       string      `json:"linkToView"`
+	PriceUSD         int64       `json:"USD"`
+	PriceHRN         int64       `json:"UAH"`
+	PriceEUR         int64       `json:"EUR"`
+	Car              Car         `json:"autoData"`
+	CheckedVin       *CheckedVIN `json:"checkedVin"`
+	PlateNumber      *string     `json:"plateNumber"`
 }
 
 func (api *API) CarInfo(ID string) (car *CarInfo, err error) {

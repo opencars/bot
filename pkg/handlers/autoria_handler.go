@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 	"log"
 	"net/url"
@@ -22,8 +23,8 @@ const (
 )
 
 type AutoRiaHandler struct {
-	API           *autoria.API
-	ApiKey        string
+	API *autoria.API
+	//ApiKey        string
 	Period        time.Duration
 	Recognizer    *openalpr.API
 	Toolkit       *toolkit.Client
@@ -168,6 +169,30 @@ func (h AutoRiaHandler) AnalyzePhotos(photos []autoria.Photo) string {
 	return bestMatch
 }
 
+func (h AutoRiaHandler) getNumber(id string) (string, error) {
+	car, err := h.API.CarInfo(id)
+	if err != nil {
+		log.Printf("error: %s", err.Error())
+	}
+
+	if car.PlateNumber != nil {
+		res := strings.Join(strings.Split(*car.PlateNumber, " "), "")
+		return res, nil
+	}
+
+	resp, err := h.API.CarPhotos(id)
+	if err != nil {
+		return "", err
+	}
+
+	plate := h.AnalyzePhotos(resp.Photos)
+	if plate == "" {
+		return "", fmt.Errorf("not found")
+	}
+
+	return plate, nil
+}
+
 // Analyze first 50 photos, then find best number, that matches the rules.
 // Send message firstly.
 func (h AutoRiaHandler) CarInfoHandler(msg *bot.Event) {
@@ -178,27 +203,11 @@ func (h AutoRiaHandler) CarInfoHandler(msg *bot.Event) {
 	pattern := regexp.MustCompile(`(.*)([0-9]{8})(.*)`)
 	id := strings.TrimSpace(pattern.ReplaceAllString(msg.Message.Text, "$2"))
 
-	autoriaAPI := autoria.New(h.ApiKey)
-	resp, err := autoriaAPI.CarPhotos(id)
-
+	plate, err := h.getNumber(id)
 	if err != nil {
-		if err := msg.Send("Неправильний ідентифікатор 🙄️"); err != nil {
-			log.Printf("send error: %s", err.Error())
-		}
-		return
-	}
-
-	// Get user know about waiting time.
-	if err := msg.Send("Перевірка може зайняти до 5 хвилин 🐌"); err != nil {
-		log.Printf("send error: %s\n", err.Error())
-	}
-
-	plate := h.AnalyzePhotos(resp.Photos)
-	if plate == "" {
-		if err := msg.Send("Вибачте, номер не знайдено 😳"); err != nil {
+		if err := msg.Send("Номер не знайдено"); err != nil {
 			log.Printf("send error: %s\n", err.Error())
 		}
-		return
 	}
 
 	operations, err := h.Toolkit.Operation().FindByNumber(plate)

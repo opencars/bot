@@ -36,7 +36,6 @@ func main() {
 	autoRiaHandler := handlers.AutoRiaHandler{
 		API:           autoria.New(conf.AutoRia.ApiKey),
 		Period:        conf.AutoRia.Period.Duration,
-		ApiKey:        conf.AutoRia.ApiKey,
 		Recognizer:    openalpr.New(recognizerURL),
 		Toolkit:       toolkit.New(openCarsURL, authToken),
 		Subscriptions: make(map[int64]*subscription.Subscription),
