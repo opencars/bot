@@ -47,7 +47,7 @@ func (h OpenCarsHandler) getInfoByNumber(number string) (string, error) {
 }
 
 func (h OpenCarsHandler) getRegistrationsByNumber(number string) (string, error) {
-	registration, err := h.client.Registration().FindByNumber(number)
+	registrations, err := h.client.Registration().FindByNumber(number)
 	if err != nil {
 		return "", err
 	}
@@ -57,14 +57,18 @@ func (h OpenCarsHandler) getRegistrationsByNumber(number string) (string, error)
 		return "", err
 	}
 
-	buff := bytes.Buffer{}
-	if err := tpl.Execute(&buff, struct {
+	type payload struct {
 		Registrations []toolkit.Registration
-		Number        string
-	}{
-		registration,
-		number,
-	}); err != nil {
+		Code, Number  string
+	}
+
+	tmp := payload{
+		Registrations: registrations,
+		Number:        number,
+	}
+
+	buff := bytes.Buffer{}
+	if err := tpl.Execute(&buff, tmp); err != nil {
 		return "", err
 	}
 

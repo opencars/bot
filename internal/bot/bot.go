@@ -86,11 +86,13 @@ func (bot *Bot) handleMsg(request *tgbotapi.Message) {
 
 	for _, entry := range bot.mux {
 		if entry.match(request.Text) {
-			log.Printf("Text: %s\n", request.Text)
+			log.Printf("Matched Text: %s\n", request.Text)
 			entry.handler.Handle(&Event{bot.api, request})
 			return
 		}
 	}
+
+	log.Printf("Text: %s\n", request.Text)
 }
 
 func (bot *Bot) handle(update *tgbotapi.Update) {

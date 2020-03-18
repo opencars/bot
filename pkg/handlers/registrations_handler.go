@@ -1,10 +1,11 @@
 package handlers
 
 import (
-	"log"
-	"strings"
-
+	"bytes"
 	"github.com/opencars/bot/internal/bot"
+	"github.com/opencars/toolkit"
+	"html/template"
+	"log"
 )
 
 func (h OpenCarsHandler) RegistrationHandler(msg *bot.Event) {
@@ -12,23 +13,42 @@ func (h OpenCarsHandler) RegistrationHandler(msg *bot.Event) {
 		log.Printf("action error: %s", err.Error())
 	}
 
-	code := strings.TrimPrefix(msg.Message.Text, "/registration")
-	code = strings.TrimSpace(code)
-	code = strings.ToUpper(code)
-
-	if code == "" {
+	if msg.Message.Text == "" {
 		if err := msg.SendHTML("Номер відсутній"); err != nil {
 			log.Printf("send error: %s\n", err.Error())
 		}
 		return
 	}
 
-	text, err := h.getRegistrationsByNumber(code)
+	registration, err := h.client.Registration().FindByCode(msg.Message.Text)
 	if err != nil {
-		log.Println(err.Error())
+		log.Printf("action error: %s\n", err)
 	}
 
-	if err := msg.SendHTML(text); err != nil {
+	tpl, err := template.ParseFiles("templates/registrations.tpl")
+	if err != nil {
+		log.Printf("action error: %s\n", err)
+		return
+	}
+
+	type payload struct {
+		Registrations []toolkit.Registration
+		Number, Code  string
+	}
+
+	var tmp payload
+	tmp.Code = msg.Message.Text
+	if registration != nil {
+		tmp.Registrations = []toolkit.Registration{*registration}
+	}
+
+	buff := bytes.Buffer{}
+	if err := tpl.Execute(&buff, tmp); err != nil {
+		log.Printf("action error: %s\n", err)
+		return
+	}
+
+	if err := msg.SendHTML(buff.String()); err != nil {
 		log.Printf("send error: %s\n", err.Error())
 	}
 }
