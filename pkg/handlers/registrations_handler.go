@@ -2,10 +2,11 @@ package handlers
 
 import (
 	"bytes"
-	"github.com/opencars/bot/internal/bot"
-	"github.com/opencars/toolkit"
 	"html/template"
 	"log"
+
+	"github.com/opencars/bot/internal/bot"
+	"github.com/opencars/toolkit"
 )
 
 func (h OpenCarsHandler) RegistrationHandler(msg *bot.Event) {

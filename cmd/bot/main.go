@@ -4,6 +4,8 @@ import (
 	"flag"
 	"log"
 
+	"github.com/opencars/bot/pkg/store/sqlstore"
+
 	"github.com/opencars/bot/internal/bot"
 	"github.com/opencars/bot/internal/subscription"
 	"github.com/opencars/bot/pkg/autoria"
@@ -22,6 +24,11 @@ func main() {
 	flag.Parse()
 
 	conf, err := config.New(configPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	store, err := sqlstore.New(conf.Store)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -46,7 +53,7 @@ func main() {
 		openalpr.New(recognizerURL),
 	)
 
-	app := bot.New()
+	app := bot.New(store)
 
 	app.HandleFuncRegexp(`^\p{L}{2}\d{4}\p{L}{2}$`, openCarsHandler.PlatesHandler)
 	app.HandleFuncRegexp(`^\p{L}{3}\d{6}$`, openCarsHandler.RegistrationHandler)
