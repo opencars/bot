@@ -8,6 +8,10 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
+
+	"github.com/opencars/bot/pkg/model"
+	"github.com/opencars/bot/pkg/store"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 
@@ -39,6 +43,7 @@ type Bot struct {
 	api          *tgbotapi.BotAPI
 	mux          []MuxEntry
 	photoHandler Handler
+	store        store.Store
 }
 
 // Handle registers handler by key.
@@ -61,11 +66,12 @@ func (bot *Bot) HandleRegexp(regexp *regexp.Regexp, handler Handler) {
 
 // HandleFuncRegexp registers handler function by regular expression.
 func (bot *Bot) HandleFuncRegexp(expr string, handler func(*Event)) {
-	regexp, err := regexp.Compile(expr)
+	pattern, err := regexp.Compile(expr)
 	if err != nil {
 		panic(err)
 	}
-	bot.HandleRegexp(regexp, HandlerFunc(handler))
+
+	bot.HandleRegexp(pattern, HandlerFunc(handler))
 }
 
 // HandleFunc registers handler function by key.
@@ -77,28 +83,69 @@ func (bot *Bot) HandlePhoto(handler func(*Event)) {
 	bot.photoHandler = HandlerFunc(handler)
 }
 
-func (bot *Bot) handleMsg(request *tgbotapi.Message) {
-	log.Printf("User { ID: %d, name: %s }\n", request.From.ID, request.From)
+func (bot *Bot) handle(update *tgbotapi.Update) {
+	if update.Message == nil {
+		return
+	}
 
-	if request.Photo != nil && bot.photoHandler != nil {
-		bot.photoHandler.Handle(&Event{bot.api, request})
+	event := Event{
+		API:     bot.api,
+		Message: update.Message,
+	}
+
+	lastName := &update.Message.From.LastName
+	if *lastName == "" {
+		lastName = nil
+	}
+
+	userName := &update.Message.From.UserName
+	if *userName == "" {
+		userName = nil
+	}
+
+	lang := &update.Message.From.LanguageCode
+	if *lang == "" {
+		lang = nil
+	}
+
+	user := model.User{
+		ID:           update.Message.From.ID,
+		FirstName:    update.Message.From.FirstName,
+		LastName:     lastName,
+		UserName:     userName,
+		LanguageCode: lang,
+	}
+
+	if err := bot.store.User().Create(&user); err != nil {
+		log.Println(err)
+	}
+
+	if update.Message.Photo != nil && bot.photoHandler != nil {
+		bot.photoHandler.Handle(&event)
 	}
 
 	for _, entry := range bot.mux {
-		if entry.match(request.Text) {
-			log.Printf("Matched Text: %s\n", request.Text)
-			entry.handler.Handle(&Event{bot.api, request})
-			return
+		if !entry.match(update.Message.Text) {
+			continue
 		}
+
+		tmp := model.Update{
+			ID:     update.Message.MessageID,
+			UserID: update.Message.From.ID,
+			Text:   update.Message.Text,
+			Time:   time.Unix(int64(update.Message.Date), 0),
+		}
+
+		if err := bot.store.Update().Create(&tmp); err != nil {
+			log.Println(err)
+		}
+
+		log.Printf("Matched Text: %s\n", update.Message.Text)
+		entry.handler.Handle(&event)
+		return
 	}
 
-	log.Printf("Text: %s\n", request.Text)
-}
-
-func (bot *Bot) handle(update *tgbotapi.Update) {
-	if update.Message != nil {
-		bot.handleMsg(update.Message)
-	}
+	log.Printf("Text: %s\n", update.Message.Text)
 }
 
 // Listen for telegram updates.
@@ -117,14 +164,14 @@ func (bot *Bot) Listen(host, port string) error {
 			log.Printf("failed to parse body: %v", err)
 			return
 		}
-		r.Body.Close()
+
+		_ = r.Body.Close()
 
 		update := new(tgbotapi.Update)
 		if err := json.Unmarshal(bytes, update); err != nil {
 			log.Printf("update error: %s", err.Error())
 		}
 
-		// TODO: Log message content and user ID.
 		bot.handle(update)
 	})
 
@@ -133,10 +180,11 @@ func (bot *Bot) Listen(host, port string) error {
 
 // New creates new instance of the Bot.
 // Idiomatically, there is only one "Bot" instance per application.
-func New() *Bot {
+func New(store store.Store) *Bot {
 	return &Bot{
-		api: newAPI(),
-		mux: make([]MuxEntry, 0),
+		api:   newAPI(),
+		mux:   make([]MuxEntry, 0),
+		store: store,
 	}
 }
 

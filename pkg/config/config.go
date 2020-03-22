@@ -7,22 +7,33 @@ import (
 )
 
 type Config struct {
-	AutoRia AutoRia `toml:"autoria"`
+	AutoRia *AutoRia `toml:"autoria"`
+	Store   *Store   `toml:"store"`
 }
 
 type Duration struct {
 	time.Duration
 }
 
-func (d *Duration) UnmarshalText(text []byte) error {
-	var err error
-	d.Duration, err = time.ParseDuration(string(text))
-	return err
-}
-
 type AutoRia struct {
 	Period Duration `toml:"period"`
 	ApiKey string   `toml:"api_key"`
+}
+
+type Store struct {
+	Host     string `toml:"host"`
+	Port     int    `toml:"port"`
+	User     string `toml:"user"`
+	Password string `toml:"password"`
+	Database string `toml:"database"`
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler{} for Duration type.
+func (d *Duration) UnmarshalText(text []byte) error {
+	var err error
+
+	d.Duration, err = time.ParseDuration(string(text))
+	return err
 }
 
 // New reads application configuration from specified file path.

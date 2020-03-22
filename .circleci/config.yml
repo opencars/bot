@@ -3,9 +3,13 @@ version: 2
 jobs:
   test:
     docker:
-      - image: circleci/golang:1.13
+      - image: circleci/golang:1.14
         environment:
           GO111MODULE: "on"
+      - image: circleci/postgres:9.6-alpine
+        environment:
+          POSTGRES_USER: postgres
+          POSTGRES_DB: bot_test
     working_directory: /go/src/github.com/opencars/bot
     steps:
       - checkout
@@ -23,8 +27,27 @@ jobs:
             - "/go/pkg/mod"
 
       - run:
+          name: "Waiting for Postgres to be ready"
+          command: |
+            for i in `seq 1 10`;
+            do
+              nc -z localhost 5432 && echo Success && exit 0
+              echo -n .
+              sleep 1
+            done
+            echo Failed waiting for Postgres && exit 1
+
+      - run:
+          name: "Run migrations"
+          environment:
+            GO111MODULE: "off"
+          command: |
+            go get -tags 'postgres' -u github.com/golang-migrate/migrate/cmd/migrate
+            migrate -source file://migrations -database postgres://postgres:@localhost:5432/bot_test\?sslmode=disable up
+
+      - run:
           name: "Run Tests"
-          command: "go test -v -race ./..."
+          command: "go test -v -bench=. -race ./..."
 
       - run:
           name: "Lint Code"
@@ -35,12 +58,13 @@ jobs:
             GO111MODULE=on golangci-lint run
 
       - run:
-          name: Build Project Binary
+          name: "Build Project Binary"
           command: |
-            go build cmd/bot/main.go
+            go build -o ./bin/bot ./cmd/bot/main.go
+
   release:
     docker:
-      - image: circleci/golang:1.13
+      - image: circleci/golang:1.14
         environment:
           GO111MODULE: "off"
           USER_NAME: "Ali Shanaakh"
@@ -71,7 +95,7 @@ jobs:
       - checkout
 
       - run:
-          name: "Login in Quay.io"
+          name: "Login to quay.io"
           command: |
             docker login -u=${DOCKER_USER} -p=${DOCKER_PASSWORD} quay.io
 
@@ -86,7 +110,6 @@ jobs:
           command: |
             docker push quay.io/opencars/bot:${CIRCLE_TAG}
             docker push quay.io/opencars/bot
-
 workflows:
   version: 2
   test-relase-build:
