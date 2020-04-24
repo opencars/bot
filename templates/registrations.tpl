@@ -1,10 +1,10 @@
 {{ if len .Registrations }}
 {{ range $i, $registration := .Registrations -}}
-<b>Номер: </b><a href="https://www.opencars.app/#/number/{{ .Number }}">{{ .Number }}</a>
-<b>Номер документа: </b><a href="https://www.opencars.app/#/code/{{ .Code }}">{{ .Code }}</a>
+<b>Номер: </b><a href="https://www.opencars.app/number/{{ .Number }}">{{ .Number }}</a>
+<b>Номер документа: </b><a href="https://www.opencars.app/code/{{ .Code }}">{{ .Code }}</a>
 <b>Марка: </b>{{ .Brand }}
 <b>Модель: </b>{{ .Model }}
-<b>VIN: </b><a href="https://www.opencars.app/#/vin/{{ .VIN }}">{{ .VIN }}</a>
+<b>VIN: </b><a href="https://www.opencars.app/vin/{{ .VIN }}">{{ .VIN }}</a>
 <b>Колір: </b>{{ .Color }}
 <b>Тип: </b>{{ .Kind }}
 <b>Рік випуску: </b>{{ .Year }}

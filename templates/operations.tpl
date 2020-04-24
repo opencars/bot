@@ -2,7 +2,7 @@
 Реєстрації транспортних засобів за номером <b>{{ .Number }}</b> — {{ len .Operations }}
 
 {{ range $i, $operation := .Operations -}}
-<b>Номер: </b><a href="https://www.opencars.app/#/number/{{ .Number }}">{{ .Number }}</a>
+<b>Номер: </b><a href="https://www.opencars.app/number/{{ .Number }}">{{ .Number }}</a>
 <b>Марка: </b>{{ .Brand }}
 <b>Модель: </b>{{ .Model }}
 <b>Колір: </b>{{ .Color }}
