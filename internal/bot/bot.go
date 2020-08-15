@@ -150,13 +150,13 @@ func (bot *Bot) handle(update *tgbotapi.Update) {
 
 // Listen for telegram updates.
 func (bot *Bot) Listen(host, port string) error {
-	URL := fmt.Sprintf("%s/tg/%s", host, bot.api.Token)
+	URL := fmt.Sprintf("%s/api/v1/bot/tg/%s", host, bot.api.Token)
 	_, err := bot.api.SetWebhook(tgbotapi.NewWebhook(URL))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	path := fmt.Sprintf("/tg/%s", bot.api.Token)
+	path := fmt.Sprintf("/api/v1/bot/tg/%s", bot.api.Token)
 
 	http.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 		bytes, err := ioutil.ReadAll(r.Body)
