@@ -4,7 +4,7 @@ services:
   postgres:
     image: postgres:12.0
     environment:
-      POSTGRES_USER: "opencars"
+      POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "password"
       POSTGRES_DB: "bot"
     restart: on-failure
