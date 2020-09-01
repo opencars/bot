@@ -20,6 +20,18 @@ List of supported environment variables
 
 ## Development
 
+Start postgres database
+
+```sh
+docker-compose up -Vd postgres
+```
+
+Migrate database
+
+```sh
+migrate -path=migrations -database "postgres://opencars:password@localhost/bot?sslmode=disable" up
+```
+
 Prerequisites:
 
 - [Ngrok](https://ngrok.com/).

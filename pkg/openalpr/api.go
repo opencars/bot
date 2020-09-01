@@ -7,16 +7,23 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
+	"time"
 
 	"github.com/opencars/bot/pkg/match"
 )
 
 type API struct {
-	URI string
+	client *http.Client
+	URI    string
 }
 
 func New(URI string) *API {
-	return &API{URI: URI}
+	return &API{
+		URI: URI,
+		client: &http.Client{
+			Timeout: 10 * time.Second,
+		},
+	}
 }
 
 func (r *Image) Plates() ([]string, error) {
@@ -32,6 +39,7 @@ func (r *Image) Plates() ([]string, error) {
 		sort.Slice(candidates, func(i, j int) bool {
 			return candidates[i].Confidence > candidates[j].Confidence
 		})
+
 
 		// Find first plates, that matches.
 		plate := candidates[0].Plate
@@ -49,19 +57,19 @@ func (r *Image) Plates() ([]string, error) {
 }
 
 func (api *API) Recognize(uri string) (*Image, error) {
-	URI := fmt.Sprintf("%s/v2/identify/plate?image_url=%s", api.URI, uri)
+	URI := fmt.Sprintf("%s/api/v1/alpr/private/recognize?image_url=\"=%s", api.URI, uri)
 
 	if _, err := url.ParseRequestURI(uri); err != nil {
 		return nil, err
 	}
 
-	resp, err := http.Get(URI)
+	resp, err := api.client.Get(URI)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	img := Image{}
+	var img Image
 	if err := json.NewDecoder(resp.Body).Decode(&img); err != nil {
 		return nil, fmt.Errorf("invalid response body: %w", err)
 	}

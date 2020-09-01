@@ -26,6 +26,7 @@ type Store struct {
 	User     string `toml:"user"`
 	Password string `toml:"password"`
 	Database string `toml:"database"`
+	SSLMode  string `toml:"ssl_mode"`
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler{} for Duration type.

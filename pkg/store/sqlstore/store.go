@@ -37,8 +37,8 @@ func (s *Store) Update() store.UpdateRepository {
 }
 
 func New(conf *config.Store) (*Store, error) {
-	dataSourceName := fmt.Sprintf("host=%s port=%d user=%s dbname=%s sslmode=disable password=%s",
-		conf.Host, conf.Port, conf.User, conf.Database, conf.Password,
+	dataSourceName := fmt.Sprintf("host=%s port=%d user=%s dbname=%s sslmode=%s password=%s",
+		conf.Host, conf.Port, conf.User, conf.Database, conf.SSLMode, conf.Password,
 	)
 
 	db, err := sqlx.Connect("postgres", dataSourceName)

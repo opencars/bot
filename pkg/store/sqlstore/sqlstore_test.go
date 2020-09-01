@@ -15,13 +15,18 @@ func TestMain(m *testing.M) {
 	conf = &config.Store{
 		Host:     os.Getenv("DATABASE_HOST"),
 		Port:     5432,
-		User:     "postgres",
+		User:     "opencars",
 		Password: os.Getenv("DATABASE_PASSWORD"),
-		Database: "bot_test",
+		Database: "bot",
+		SSLMode:  "disable",
 	}
 
 	if conf.Host == "" {
 		conf.Host = "127.0.0.1"
+	}
+
+	if conf.Password == "" {
+		conf.Password = "password"
 	}
 
 	code := m.Run()
