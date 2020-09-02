@@ -5,7 +5,7 @@ autoria:
 database:
   host: "127.0.0.1"
   port:  5432
-  user: "opencars"
+  username: "opencars"
   password: "password"
   database: "bot"
   ssl_mode: "disable"

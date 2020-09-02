@@ -24,7 +24,7 @@ type AutoRia struct {
 type Store struct {
 	Host     string `yaml:"host"`
 	Port     int    `yaml:"port"`
-	User     string `yaml:"user"`
+	User     string `yaml:"username"`
 	Password string `yaml:"password"`
 	Database string `yaml:"database"`
 	SSLMode  string `yaml:"ssl_mode"`
