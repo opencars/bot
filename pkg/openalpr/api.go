@@ -40,7 +40,6 @@ func (r *Image) Plates() ([]string, error) {
 			return candidates[i].Confidence > candidates[j].Confidence
 		})
 
-
 		// Find first plates, that matches.
 		plate := candidates[0].Plate
 		for _, candidate := range candidates {

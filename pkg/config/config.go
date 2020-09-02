@@ -1,14 +1,15 @@
 package config
 
 import (
+	"os"
 	"time"
 
-	"github.com/BurntSushi/toml"
+	"gopkg.in/yaml.v2"
 )
 
 type Config struct {
-	AutoRia *AutoRia `toml:"autoria"`
-	Store   *Store   `toml:"store"`
+	AutoRia *AutoRia `yaml:"autoria"`
+	Store   *Store   `yaml:"database"`
 }
 
 type Duration struct {
@@ -16,17 +17,17 @@ type Duration struct {
 }
 
 type AutoRia struct {
-	Period Duration `toml:"period"`
-	ApiKey string   `toml:"api_key"`
+	Period Duration `yaml:"period"`
+	ApiKey string   `yaml:"api_key"`
 }
 
 type Store struct {
-	Host     string `toml:"host"`
-	Port     int    `toml:"port"`
-	User     string `toml:"user"`
-	Password string `toml:"password"`
-	Database string `toml:"database"`
-	SSLMode  string `toml:"ssl_mode"`
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	User     string `yaml:"user"`
+	Password string `yaml:"password"`
+	Database string `yaml:"database"`
+	SSLMode  string `yaml:"ssl_mode"`
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler{} for Duration type.
@@ -41,7 +42,12 @@ func (d *Duration) UnmarshalText(text []byte) error {
 func New(path string) (*Config, error) {
 	var config Config
 
-	if _, err := toml.DecodeFile(path, &config); err != nil {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := yaml.NewDecoder(f).Decode(&config); err != nil {
 		return nil, err
 	}
 
