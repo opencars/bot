@@ -16,7 +16,6 @@ List of supported environment variables
 | `PORT`           | Web server port    |
 | `TELEGRAM_TOKEN` | Telegram API token |
 | `AUTO_RIA_TOKEN` | AutoRia API token  |
-| `RECOGNIZER_URL` | Plates recognizer  |
 
 ## Development
 

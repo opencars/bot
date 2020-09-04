@@ -34,8 +34,7 @@ func (h OpenCarsHandler) PhotoHandler(msg *bot.Event) {
 	}
 	log.Printf("Photo: %s\n", url)
 
-	// Send received photo to be recognized.
-	image, err := h.recognizer.Recognize(url)
+	results, err := h.client.ALPR().Recognize(url)
 	if err != nil {
 		somethingWentWrong(msg)
 		log.Println(err.Error())
@@ -43,18 +42,16 @@ func (h OpenCarsHandler) PhotoHandler(msg *bot.Event) {
 	}
 
 	// If nothing was found, send user notification.
-	if len(image.Recognized) == 0 {
+	if len(results) == 0 {
 		if err := msg.Send("Номер не знайдено 🤔"); err != nil {
 			log.Printf("send error: %s\n", err.Error())
 		}
 		return
 	}
 
-	plates, err := image.Plates()
-	if err != nil {
-		log.Println(err.Error())
-		// TODO: Send something in case of error.
-		return
+	plates := make([]string, len(results))
+	for i := range results {
+		plates[i] = results[i].Plate
 	}
 
 	// Send number to user.

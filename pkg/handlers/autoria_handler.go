@@ -13,20 +13,12 @@ import (
 	"github.com/opencars/bot/internal/bot"
 	"github.com/opencars/bot/internal/subscription"
 	"github.com/opencars/bot/pkg/autoria"
-	"github.com/opencars/bot/pkg/match"
-	"github.com/opencars/bot/pkg/openalpr"
 	"github.com/opencars/toolkit"
 )
 
-const (
-	MaxSize = 50
-)
-
 type AutoRiaHandler struct {
-	API *autoria.API
-	//ApiKey        string
+	API           *autoria.API
 	Period        time.Duration
-	Recognizer    *openalpr.API
 	Toolkit       *toolkit.Client
 	Subscriptions map[int64]*subscription.Subscription
 }
@@ -141,38 +133,28 @@ func (h AutoRiaHandler) StopHandler(msg *bot.Event) {
 }
 
 func (h AutoRiaHandler) AnalyzePhotos(photos []autoria.Photo) string {
-	bestMatch := ""
-
 	for _, photo := range photos {
-		response, err := h.Recognizer.Recognize(photo.URL())
+		results, err := h.Toolkit.ALPR().Recognize(photo.URL())
 		if err != nil {
 			log.Println(err)
 			continue
 		}
 
-		plates, err := response.Plates()
-		if err != nil {
+		if len(results) == 0 {
 			continue
 		}
 
-		if bestMatch == "" {
-			bestMatch = plates[0]
-		}
-
-		for _, plate := range plates {
-			if match.EuroPlates(plate) {
-				return plate
-			}
-		}
+		return results[0].Plate
 	}
 
-	return bestMatch
+	return ""
 }
 
 func (h AutoRiaHandler) getNumber(id string) (string, error) {
 	car, err := h.API.CarInfo(id)
 	if err != nil {
 		log.Printf("error: %s", err.Error())
+		return "", err
 	}
 
 	if car.PlateNumber != nil {

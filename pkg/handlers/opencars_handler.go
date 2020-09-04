@@ -5,19 +5,16 @@ import (
 	"html/template"
 	"log"
 
-	"github.com/opencars/bot/pkg/openalpr"
 	"github.com/opencars/toolkit"
 )
 
 type OpenCarsHandler struct {
-	client     *toolkit.Client
-	recognizer *openalpr.API
+	client *toolkit.Client
 }
 
-func NewOpenCarsHandler(client *toolkit.Client, recognizer *openalpr.API) *OpenCarsHandler {
+func NewOpenCarsHandler(client *toolkit.Client) *OpenCarsHandler {
 	return &OpenCarsHandler{
-		client:     client,
-		recognizer: recognizer,
+		client: client,
 	}
 }
 
