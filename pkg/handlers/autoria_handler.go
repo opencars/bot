@@ -208,6 +208,7 @@ func (h AutoRiaHandler) CarInfoHandler(msg *bot.Event) {
 	if err := tpl.Execute(&buff, struct {
 		Operations []toolkit.Operation
 		Number     string
+		Code       *string
 	}{
 		Operations: operations,
 		Number:     plate,
