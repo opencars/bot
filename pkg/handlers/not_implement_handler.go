@@ -1,13 +1,12 @@
 package handlers
 
 import (
-	"log"
-
 	"github.com/opencars/bot/internal/bot"
+	"github.com/opencars/bot/pkg/logger"
 )
 
 func (h OpenCarsHandler) NotImplemented(msg *bot.Event) {
 	if err := msg.SendHTML("Not implemented."); err != nil {
-		log.Printf("send error: %s\n", err.Error())
+		logger.Errorf("send error: %s", err)
 	}
 }

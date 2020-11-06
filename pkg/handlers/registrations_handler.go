@@ -3,32 +3,33 @@ package handlers
 import (
 	"bytes"
 	"html/template"
-	"log"
+
+	"github.com/opencars/toolkit"
 
 	"github.com/opencars/bot/internal/bot"
-	"github.com/opencars/toolkit"
+	"github.com/opencars/bot/pkg/logger"
 )
 
 func (h OpenCarsHandler) RegistrationHandler(msg *bot.Event) {
 	if err := msg.SetStatus(bot.ChatTyping); err != nil {
-		log.Printf("action error: %s", err.Error())
+		logger.Errorf("action error: %s", err)
 	}
 
 	if msg.Message.Text == "" {
 		if err := msg.SendHTML("Номер відсутній"); err != nil {
-			log.Printf("send error: %s\n", err.Error())
+			logger.Errorf("send error: %s", err)
 		}
 		return
 	}
 
 	registration, err := h.client.Registration().FindByCode(msg.Message.Text)
 	if err != nil {
-		log.Printf("action error: %s\n", err)
+		logger.Errorf("action error: %s", err)
 	}
 
 	tpl, err := template.ParseFiles("templates/registrations.tpl")
 	if err != nil {
-		log.Printf("action error: %s\n", err)
+		logger.Errorf("action error: %s", err)
 		return
 	}
 
@@ -45,11 +46,11 @@ func (h OpenCarsHandler) RegistrationHandler(msg *bot.Event) {
 
 	buff := bytes.Buffer{}
 	if err := tpl.Execute(&buff, tmp); err != nil {
-		log.Printf("action error: %s\n", err)
+		logger.Errorf("action error: %s", err)
 		return
 	}
 
 	if err := msg.SendHTML(buff.String()); err != nil {
-		log.Printf("send error: %s\n", err.Error())
+		logger.Errorf("send error: %s", err.Error())
 	}
 }

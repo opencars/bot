@@ -3,6 +3,8 @@ package autoria
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/opencars/bot/pkg/logger"
 )
 
 type Photo struct {
@@ -31,6 +33,8 @@ func (api *API) CarPhotos(ID string) (res *PhotosResponse, err error) {
 	if err != nil {
 		return nil, err
 	}
+
+	logger.Debugf("%v", resp.StatusCode)
 
 	err = json.NewDecoder(resp.Body).Decode(&res)
 	if err != nil {

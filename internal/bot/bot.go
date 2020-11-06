@@ -4,18 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"regexp"
 	"strings"
 	"time"
 
-	"github.com/opencars/bot/pkg/model"
-	"github.com/opencars/bot/pkg/store"
-
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 
-	"github.com/opencars/bot/pkg/env"
+	"github.com/opencars/bot/pkg/logger"
+	"github.com/opencars/bot/pkg/model"
+	"github.com/opencars/bot/pkg/store"
 )
 
 // Constant values for ChatActions.
@@ -88,36 +86,36 @@ func (bot *Bot) handle(update *tgbotapi.Update) {
 		return
 	}
 
+	l := logger.WithFields(logger.Fields{
+		"id":           update.UpdateID,
+		"text":         update.Message.Text,
+		"message_date": update.Message.Date,
+	})
+
 	event := Event{
 		API:     bot.api,
 		Message: update.Message,
 	}
 
-	lastName := &update.Message.From.LastName
-	if *lastName == "" {
-		lastName = nil
-	}
-
-	userName := &update.Message.From.UserName
-	if *userName == "" {
-		userName = nil
-	}
-
-	lang := &update.Message.From.LanguageCode
-	if *lang == "" {
-		lang = nil
-	}
-
 	user := model.User{
-		ID:           update.Message.From.ID,
-		FirstName:    update.Message.From.FirstName,
-		LastName:     lastName,
-		UserName:     userName,
-		LanguageCode: lang,
+		ID:        update.Message.From.ID,
+		FirstName: update.Message.From.FirstName,
+	}
+
+	if update.Message.From.LastName != "" {
+		user.LastName = &update.Message.From.LastName
+	}
+
+	if update.Message.From.UserName != "" {
+		user.UserName = &update.Message.From.UserName
+	}
+
+	if update.Message.From.LanguageCode == "" {
+		user.LanguageCode = &update.Message.From.LanguageCode
 	}
 
 	if err := bot.store.User().Create(&user); err != nil {
-		log.Println(err)
+		l.Errorf("failed to create user: %s", err)
 	}
 
 	if update.Message.Photo != nil && bot.photoHandler != nil {
@@ -129,31 +127,33 @@ func (bot *Bot) handle(update *tgbotapi.Update) {
 			continue
 		}
 
-		tmp := model.Update{
+		dto := model.Update{
 			ID:     update.Message.MessageID,
 			UserID: update.Message.From.ID,
 			Text:   update.Message.Text,
 			Time:   time.Unix(int64(update.Message.Date), 0),
 		}
 
-		if err := bot.store.Update().Create(&tmp); err != nil {
-			log.Println(err)
+		if err := bot.store.Update().Create(&dto); err != nil {
+			l.Errorf("failed to save update: %s", err)
 		}
 
-		log.Printf("Matched Text: %s\n", update.Message.Text)
+		l.WithFields(logger.Fields{
+			"user_id":  update.Message.From.ID,
+			"username": update.Message.From.UserName,
+		}).Debugf("handle event")
+
 		entry.handler.Handle(&event)
 		return
 	}
-
-	log.Printf("Text: %s\n", update.Message.Text)
 }
 
 // Listen for telegram updates.
-func (bot *Bot) Listen(host, port string) error {
+func (bot *Bot) Listen(host string, addr string) error {
 	URL := fmt.Sprintf("%s/api/v1/bot/tg/%s", host, bot.api.Token)
 	_, err := bot.api.SetWebhook(tgbotapi.NewWebhook(URL))
 	if err != nil {
-		log.Fatal(err)
+		logger.Errorf("sql: %s", err)
 	}
 
 	path := fmt.Sprintf("/api/v1/bot/tg/%s", bot.api.Token)
@@ -161,7 +161,7 @@ func (bot *Bot) Listen(host, port string) error {
 	http.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 		bytes, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			log.Printf("failed to parse body: %v", err)
+			logger.Errorf("failed to parse body: %s", err)
 			return
 		}
 
@@ -169,34 +169,41 @@ func (bot *Bot) Listen(host, port string) error {
 
 		update := new(tgbotapi.Update)
 		if err := json.Unmarshal(bytes, update); err != nil {
-			log.Printf("update error: %s", err.Error())
+			logger.Errorf("update error: %s", err)
 		}
 
 		bot.handle(update)
 	})
 
-	return http.ListenAndServe(":"+port, http.DefaultServeMux)
+	return http.ListenAndServe(addr, http.DefaultServeMux)
 }
 
 // New creates new instance of the Bot.
 // Idiomatically, there is only one "Bot" instance per application.
-func New(store store.Store) *Bot {
+func New(token string, store store.Store) (*Bot, error) {
+	api, err := newAPI(token)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Bot{
-		api:   newAPI(),
+		api:   api,
 		mux:   make([]MuxEntry, 0),
 		store: store,
-	}
+	}, nil
 }
 
-func newAPI() *tgbotapi.BotAPI {
-	telegramToken := env.MustFetch("TELEGRAM_TOKEN")
-	bot, err := tgbotapi.NewBotAPI(telegramToken)
+func newAPI(token string) (*tgbotapi.BotAPI, error) {
+	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	bot.Debug = false
-	log.Printf("API authorized %s\n", bot.Self.UserName)
 
-	return bot
+	logger.WithFields(logger.Fields{
+		"username": bot.Self.UserName,
+	}).Infof("Bot authorized")
+
+	return bot, nil
 }

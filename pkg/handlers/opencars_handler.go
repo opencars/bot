@@ -3,9 +3,10 @@ package handlers
 import (
 	"bytes"
 	"html/template"
-	"log"
 
 	"github.com/opencars/toolkit"
+
+	"github.com/opencars/bot/pkg/logger"
 )
 
 type OpenCarsHandler struct {
@@ -18,7 +19,7 @@ func NewOpenCarsHandler(client *toolkit.Client) *OpenCarsHandler {
 	}
 }
 
-func (h OpenCarsHandler) getInfoByNumber(number string) (string, error) {
+func (h *OpenCarsHandler) getInfoByNumber(number string) (string, error) {
 	operations, err := h.client.Operation().FindByNumber(number)
 	if err != nil {
 		return "", err
@@ -37,13 +38,13 @@ func (h OpenCarsHandler) getInfoByNumber(number string) (string, error) {
 		operations,
 		number,
 	}); err != nil {
-		log.Println(err)
+		logger.Errorf(err.Error())
 	}
 
 	return buff.String(), nil
 }
 
-func (h OpenCarsHandler) getRegistrationsByNumber(number string) (string, error) {
+func (h *OpenCarsHandler) getRegistrationsByNumber(number string) (string, error) {
 	registrations, err := h.client.Registration().FindByNumber(number)
 	if err != nil {
 		return "", err

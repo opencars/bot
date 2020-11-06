@@ -10,10 +10,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/opencars/bot/pkg/logger"
+
+	"github.com/opencars/toolkit"
+
 	"github.com/opencars/bot/internal/bot"
 	"github.com/opencars/bot/internal/subscription"
 	"github.com/opencars/bot/pkg/autoria"
-	"github.com/opencars/toolkit"
 )
 
 type AutoRiaHandler struct {
@@ -25,12 +28,12 @@ type AutoRiaHandler struct {
 
 func (h AutoRiaHandler) FollowHandler(msg *bot.Event) {
 	if err := msg.SetStatus(bot.ChatTyping); err != nil {
-		log.Printf("action error: %s", err.Error())
+		logger.Errorf("action error: %s", err)
 	}
 
 	if !strings.HasPrefix(msg.Message.Text, "https://auto.ria.com/search") {
 		if err := msg.Send("Помилковий запит."); err != nil {
-			log.Printf("send error: %s\n", err.Error())
+			logger.Errorf("send error: %s", err)
 		}
 		return
 	}
@@ -38,7 +41,7 @@ func (h AutoRiaHandler) FollowHandler(msg *bot.Event) {
 	values, err := url.ParseQuery(msg.Message.Text)
 	if err != nil {
 		if err := msg.Send(err.Error()); err != nil {
-			log.Printf("send error: %s\n", err.Error())
+			logger.Errorf("send error: %s", err)
 		}
 		return
 	}
@@ -47,7 +50,7 @@ func (h AutoRiaHandler) FollowHandler(msg *bot.Event) {
 	values, err = h.API.ConvertNewToOld(values)
 	if err != nil {
 		if err := msg.Send(err.Error()); err != nil {
-			log.Printf("send error: %s\n", err.Error())
+			logger.Errorf("send error: %s", err)
 		}
 		return
 	}
@@ -61,7 +64,7 @@ func (h AutoRiaHandler) FollowHandler(msg *bot.Event) {
 		search, err := h.API.SearchCars(values)
 
 		if err != nil {
-			log.Printf("Failed to search cars: %s\n", err)
+			logger.Errorf("Failed to search cars: %s", err)
 			return
 		}
 
@@ -80,7 +83,7 @@ func (h AutoRiaHandler) FollowHandler(msg *bot.Event) {
 		for i, ID := range newCarIDs {
 			car, err := h.API.CarInfo(ID)
 			if err != nil {
-				log.Printf("Failed to get car info: %s\n", err)
+				logger.Errorf("Failed to get car info: %s", err)
 				return
 			}
 
@@ -89,7 +92,7 @@ func (h AutoRiaHandler) FollowHandler(msg *bot.Event) {
 
 		tpl, err := template.ParseFiles("templates/message.tpl")
 		if err != nil {
-			log.Printf("Failed to parse template: %s\n", err)
+			logger.Errorf("Failed to parse template: %s", err)
 			return
 		}
 
@@ -101,26 +104,26 @@ func (h AutoRiaHandler) FollowHandler(msg *bot.Event) {
 			Amount: search.Result.SearchResult.Count,
 		}
 
-		buff := bytes.Buffer{}
+		var buff bytes.Buffer
 		if err := tpl.Execute(&buff, res); err != nil {
-			log.Printf("Failed to execute template: %s\n", err)
+			logger.Errorf("Failed to execute template: %s", err)
 			return
 		}
 
 		if err := msg.SendHTML(buff.String()); err != nil {
-			log.Printf("send error: %s", err.Error())
+			logger.Errorf("send error: %s", err)
 		}
 	})
 }
 
 func (h AutoRiaHandler) StopHandler(msg *bot.Event) {
 	if err := msg.SetStatus(bot.ChatTyping); err != nil {
-		log.Printf("action error: %s", err.Error())
+		logger.Errorf("action error: %s", err)
 	}
 
 	if _, ok := h.Subscriptions[msg.Message.Chat.ID]; !ok {
 		if err := msg.Send("Ви не підписані на оновлення 🤔"); err != nil {
-			log.Printf("send error: %s", err.Error())
+			logger.Errorf("send error: %s", err)
 		}
 		return
 	}
@@ -128,7 +131,7 @@ func (h AutoRiaHandler) StopHandler(msg *bot.Event) {
 	h.Subscriptions[msg.Message.Chat.ID].Stop()
 
 	if err := msg.Send("Підписка призупинена ✅"); err != nil {
-		log.Printf("send error: %s", err.Error())
+		logger.Errorf("send error: %s", err)
 	}
 }
 
@@ -136,7 +139,7 @@ func (h AutoRiaHandler) AnalyzePhotos(photos []autoria.Photo) string {
 	for _, photo := range photos {
 		results, err := h.Toolkit.ALPR().Recognize(photo.URL())
 		if err != nil {
-			log.Println(err)
+			logger.Errorf("recognize: %s", err)
 			continue
 		}
 
@@ -153,7 +156,7 @@ func (h AutoRiaHandler) AnalyzePhotos(photos []autoria.Photo) string {
 func (h AutoRiaHandler) getNumber(id string) (string, error) {
 	car, err := h.API.CarInfo(id)
 	if err != nil {
-		log.Printf("error: %s", err.Error())
+		logger.Errorf("getNumber: %s", err)
 		return "", err
 	}
 
@@ -179,7 +182,7 @@ func (h AutoRiaHandler) getNumber(id string) (string, error) {
 // Send message firstly.
 func (h AutoRiaHandler) CarInfoHandler(msg *bot.Event) {
 	if err := msg.SetStatus(bot.ChatTyping); err != nil {
-		log.Printf("action error: %s", err.Error())
+		logger.Errorf("action error: %s", err)
 	}
 
 	pattern := regexp.MustCompile(`(.*)([0-9]{8})(.*)`)
@@ -188,23 +191,23 @@ func (h AutoRiaHandler) CarInfoHandler(msg *bot.Event) {
 	plate, err := h.getNumber(id)
 	if err != nil {
 		if err := msg.Send("Номер не знайдено"); err != nil {
-			log.Printf("send error: %s\n", err.Error())
+			logger.Errorf("send error: %s", err)
 		}
 	}
 
 	operations, err := h.Toolkit.Operation().FindByNumber(plate)
 	if err != nil {
-		log.Println(err)
+		logger.Errorf("find by number: %s", err)
 		return
 	}
 
 	tpl, err := template.ParseFiles("templates/operations.tpl")
 	if err != nil {
-		log.Println(err)
+		logger.Errorf("failed to parse files: %s", err)
 		return
 	}
 
-	buff := bytes.Buffer{}
+	var buff bytes.Buffer
 	if err := tpl.Execute(&buff, struct {
 		Operations []toolkit.Operation
 		Number     string
@@ -213,27 +216,27 @@ func (h AutoRiaHandler) CarInfoHandler(msg *bot.Event) {
 		Operations: operations,
 		Number:     plate,
 	}); err != nil {
-		log.Println(err)
+		logger.Errorf("execute: %s", err)
 		return
 	}
 
 	if err := msg.SendHTML(buff.String()); err != nil {
-		log.Printf("send error: %s\n", err.Error())
+		logger.Errorf("send error: %s", err)
 	}
 
 	registrations, err := h.Toolkit.Registration().FindByNumber(plate)
 	if err != nil {
-		log.Println(err)
+		logger.Errorf("find by number: %s", err)
 		return
 	}
 
 	tpl2, err := template.ParseFiles("templates/registrations.tpl")
 	if err != nil {
-		log.Println(err)
+		logger.Errorf("parse files: %s", err)
 		return
 	}
 
-	buff2 := bytes.Buffer{}
+	var buff2 bytes.Buffer
 	if err := tpl2.Execute(&buff2, struct {
 		Registrations []toolkit.Registration
 		Number        string
@@ -242,10 +245,12 @@ func (h AutoRiaHandler) CarInfoHandler(msg *bot.Event) {
 		Number:        plate,
 	}); err != nil {
 		log.Println(err)
+		logger.Debugf("execute: %s", err)
+
 		return
 	}
 
 	if err := msg.SendHTML(buff2.String()); err != nil {
-		log.Printf("send error: %s\n", err.Error())
+		logger.Errorf("send error: %s", err)
 	}
 }

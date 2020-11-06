@@ -2,25 +2,37 @@ package config
 
 import (
 	"os"
-	"time"
 
 	"gopkg.in/yaml.v2"
 )
 
+// Config represents mix of settings for the app.
 type Config struct {
-	AutoRia *AutoRia `yaml:"autoria"`
-	Store   *Store   `yaml:"database"`
+	AutoRia AutoRia `yaml:"autoria"`
+	Store   Store   `yaml:"database"`
 }
 
-type Duration struct {
-	time.Duration
+// Server represents settings for creating http server.
+type Server struct {
+	ShutdownTimeout Duration `yaml:"shutdown_timeout"`
+	ReadTimeout     Duration `yaml:"read_timeout"`
+	WriteTimeout    Duration `yaml:"write_timeout"`
+	IdleTimeout     Duration `yaml:"idle_timeout"`
 }
 
+// Log represents settings for application logger.
+type Log struct {
+	Level string `yaml:"level"`
+	Mode  string `yaml:"mode"`
+}
+
+// AutoRia represents configuration for the AutoRia API.
 type AutoRia struct {
 	Period Duration `yaml:"period"`
 	ApiKey string   `yaml:"api_key"`
 }
 
+// Store represents configuration for the storage.
 type Store struct {
 	Host     string `yaml:"host"`
 	Port     int    `yaml:"port"`
@@ -28,14 +40,6 @@ type Store struct {
 	Password string `yaml:"password"`
 	Database string `yaml:"database"`
 	SSLMode  string `yaml:"ssl_mode"`
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler{} for Duration type.
-func (d *Duration) UnmarshalText(text []byte) error {
-	var err error
-
-	d.Duration, err = time.ParseDuration(string(text))
-	return err
 }
 
 // New reads application configuration from specified file path.

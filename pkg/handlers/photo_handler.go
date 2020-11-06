@@ -1,14 +1,13 @@
 package handlers
 
 import (
-	"log"
-
 	"github.com/opencars/bot/internal/bot"
+	"github.com/opencars/bot/pkg/logger"
 )
 
 func somethingWentWrong(msg *bot.Event) {
 	if err := msg.Send("Вибач. Щось пішло не так 😢"); err != nil {
-		log.Printf("send error: %s", err.Error())
+		logger.Errorf("send error: %s", err.Error())
 	}
 }
 
@@ -16,7 +15,7 @@ func (h OpenCarsHandler) PhotoHandler(msg *bot.Event) {
 	photos := *msg.Message.Photo
 
 	if err := msg.SetStatus(bot.ChatTyping); err != nil {
-		log.Printf("action error: %s", err.Error())
+		logger.Errorf("action error: %s", err.Error())
 	}
 
 	if len(photos) < 1 {
@@ -24,27 +23,27 @@ func (h OpenCarsHandler) PhotoHandler(msg *bot.Event) {
 		return
 	}
 
-	// TODO: Think about this code snippet.
 	url, err := msg.API.GetFileDirectURL(photos[len(photos)-1].FileID)
 	if err != nil {
 
 		somethingWentWrong(msg)
-		log.Println(err.Error())
+		logger.Errorf(err.Error())
 		return
 	}
-	log.Printf("Photo: %s\n", url)
+
+	logger.Debugf("Photo: %s", url)
 
 	results, err := h.client.ALPR().Recognize(url)
 	if err != nil {
 		somethingWentWrong(msg)
-		log.Println(err.Error())
+		logger.Errorf("recognize: %s", err)
 		return
 	}
 
 	// If nothing was found, send user notification.
 	if len(results) == 0 {
 		if err := msg.Send("Номер не знайдено 🤔"); err != nil {
-			log.Printf("send error: %s\n", err.Error())
+			logger.Errorf("send error: %s", err.Error())
 		}
 		return
 	}
@@ -56,15 +55,15 @@ func (h OpenCarsHandler) PhotoHandler(msg *bot.Event) {
 
 	// Send number to user.
 	if err := msg.Send(plates[0]); err != nil {
-		log.Printf("send error: %s\n", err.Error())
+		logger.Errorf("send error: %s", err.Error())
 	}
 
 	text, err := h.getInfoByNumber(plates[0])
 	if err != nil {
-		log.Println(err.Error())
+		logger.Errorf("failed to get info by number: %s", err)
 	}
 
 	if err := msg.SendHTML(text); err != nil {
-		log.Printf("send error: %s\n", err.Error())
+		logger.Errorf("send error: %s", err.Error())
 	}
 }
