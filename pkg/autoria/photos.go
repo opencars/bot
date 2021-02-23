@@ -41,19 +41,21 @@ func (api *API) CarPhotos(ID string) (res *PhotosResponse, err error) {
 		return nil, err
 	}
 
-	for _, v := range res.Data[ID].(map[string]interface{}) {
-		buff, err := json.Marshal(v)
-		if err != nil {
-			return nil, err
+	vv, ok := res.Data[ID].(map[string]interface{})
+	if ok {
+		for _, v := range vv {
+			buff, err := json.Marshal(v)
+			if err != nil {
+				return nil, err
+			}
+
+			var photo Photo
+			if err := json.Unmarshal(buff, &photo); err != nil {
+				return nil, err
+			}
+
+			res.Photos = append(res.Photos, photo)
 		}
-
-		img := new(Photo)
-
-		if err := json.Unmarshal(buff, &img); err != nil {
-			return nil, err
-		}
-
-		res.Photos = append(res.Photos, *img)
 	}
 
 	return res, nil

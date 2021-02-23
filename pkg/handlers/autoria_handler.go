@@ -10,13 +10,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/opencars/bot/pkg/logger"
-
 	"github.com/opencars/toolkit"
 
 	"github.com/opencars/bot/internal/bot"
 	"github.com/opencars/bot/internal/subscription"
 	"github.com/opencars/bot/pkg/autoria"
+	"github.com/opencars/bot/pkg/logger"
 )
 
 type AutoRiaHandler struct {
