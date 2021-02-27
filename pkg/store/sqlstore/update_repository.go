@@ -1,14 +1,14 @@
 package sqlstore
 
 import (
-	"github.com/opencars/bot/pkg/model"
+	"github.com/opencars/bot/pkg/domain"
 )
 
 type UpdateRepository struct {
 	store *Store
 }
 
-func (r *UpdateRepository) Create(update *model.Update) error {
+func (r *UpdateRepository) Create(update *domain.Update) error {
 	_, err := r.store.db.NamedExec(
 		`INSERT INTO updates (
 			id, user_id, text, time
@@ -25,8 +25,8 @@ func (r *UpdateRepository) Create(update *model.Update) error {
 	return nil
 }
 
-func (r *UpdateRepository) FindByID(id int) (*model.Update, error) {
-	var update model.Update
+func (r *UpdateRepository) FindByID(id int) (*domain.Update, error) {
+	var update domain.Update
 
 	err := r.store.db.Get(&update,
 		`SELECT id, user_id, text, time

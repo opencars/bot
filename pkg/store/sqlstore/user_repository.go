@@ -1,14 +1,14 @@
 package sqlstore
 
 import (
-	"github.com/opencars/bot/pkg/model"
+	"github.com/opencars/bot/pkg/domain"
 )
 
 type UserRepository struct {
 	store *Store
 }
 
-func (r *UserRepository) Create(user *model.User) error {
+func (r *UserRepository) Create(user *domain.User) error {
 	_, err := r.store.db.NamedExec(
 		`INSERT INTO users (
 			id, first_name, last_name, username, language_code
@@ -25,8 +25,8 @@ func (r *UserRepository) Create(user *model.User) error {
 	return nil
 }
 
-func (r *UserRepository) FindByID(id int) (*model.User, error) {
-	var user model.User
+func (r *UserRepository) FindByID(id int) (*domain.User, error) {
+	var user domain.User
 
 	err := r.store.db.Get(&user,
 		`SELECT id, first_name, last_name, username, language_code 

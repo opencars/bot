@@ -6,7 +6,7 @@ import (
 	"github.com/jmoiron/sqlx"
 
 	"github.com/opencars/bot/pkg/config"
-	"github.com/opencars/bot/pkg/store"
+	"github.com/opencars/bot/pkg/domain"
 )
 
 type Store struct {
@@ -16,7 +16,7 @@ type Store struct {
 	updateRepository *UpdateRepository
 }
 
-func (s *Store) User() store.UserRepository {
+func (s *Store) User() domain.UserRepository {
 	if s.userRepository == nil {
 		s.userRepository = &UserRepository{
 			store: s,
@@ -26,7 +26,7 @@ func (s *Store) User() store.UserRepository {
 	return s.userRepository
 }
 
-func (s *Store) Update() store.UpdateRepository {
+func (s *Store) Update() domain.UpdateRepository {
 	if s.updateRepository == nil {
 		s.updateRepository = &UpdateRepository{
 			store: s,

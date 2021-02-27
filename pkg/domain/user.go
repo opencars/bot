@@ -1,4 +1,4 @@
-package model
+package domain
 
 // User represents bot user entity.
 type User struct {
@@ -8,3 +8,4 @@ type User struct {
 	UserName     *string `json:"username" db:"username"`
 	LanguageCode *string `json:"language_code" db:"language_code"`
 }
+

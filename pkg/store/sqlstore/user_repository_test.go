@@ -1,11 +1,11 @@
 package sqlstore_test
 
 import (
+	"github.com/opencars/bot/pkg/domain"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/opencars/bot/pkg/model"
 	"github.com/opencars/bot/pkg/store/sqlstore"
 )
 
@@ -13,7 +13,7 @@ func TestUserRepository_Create(t *testing.T) {
 	s, teardown := sqlstore.TestDB(t, conf)
 	defer teardown("users")
 
-	user := model.TestUser(t)
+	user := domain.TestUser(t)
 	assert.NoError(t, s.User().Create(user))
 }
 
@@ -21,7 +21,7 @@ func TestUserRepository_FindByID(t *testing.T) {
 	s, teardown := sqlstore.TestDB(t, conf)
 	defer teardown("users")
 
-	user := model.TestUser(t)
+	user := domain.TestUser(t)
 	assert.NoError(t, s.User().Create(user))
 
 	actual, err := s.User().FindByID(user.ID)
