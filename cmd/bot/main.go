@@ -3,16 +3,19 @@ package main
 import (
 	"context"
 	"flag"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/opencars/toolkit"
+
 	"github.com/opencars/bot/pkg/bot"
+	"github.com/opencars/bot/pkg/config"
 	"github.com/opencars/bot/pkg/domain/operation"
 	"github.com/opencars/bot/pkg/domain/registration"
 	"github.com/opencars/bot/pkg/domain/vehicle"
 	"github.com/opencars/bot/pkg/env"
 	"github.com/opencars/bot/pkg/logger"
-	"github.com/opencars/toolkit"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
 func main() {
@@ -24,10 +27,10 @@ func main() {
 
 	flag.Parse()
 
-	//conf, err := config.New(configPath)
-	//if err != nil {
-	//	logger.Errorf("config: %s", err)
-	//}
+	conf, err := config.New(configPath)
+	if err != nil {
+		logger.Errorf("config: %s", err)
+	}
 
 	// store, err := sqlstore.New(&conf.Store)
 	// if err != nil {

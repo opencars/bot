@@ -2,6 +2,7 @@ package bot
 
 import (
 	"context"
+
 	"gopkg.in/tucnak/telebot.v2"
 )
 

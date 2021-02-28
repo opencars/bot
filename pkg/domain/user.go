@@ -8,4 +8,3 @@ type User struct {
 	UserName     *string `json:"username" db:"username"`
 	LanguageCode *string `json:"language_code" db:"language_code"`
 }
-

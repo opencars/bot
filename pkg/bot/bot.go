@@ -2,13 +2,13 @@ package bot
 
 import (
 	"context"
-	"github.com/opencars/bot/pkg/logger"
 	"regexp"
 	"time"
 
 	"gopkg.in/tucnak/telebot.v2"
 
 	"github.com/opencars/bot/pkg/domain"
+	"github.com/opencars/bot/pkg/logger"
 )
 
 var (
@@ -22,7 +22,20 @@ type Bot struct {
 	vehicle domain.VehicleService
 }
 
-func NewBot(v domain.VehicleService, token string) (*Bot, error) {
+func NewBot(v domain.VehicleService, , token string) (*Bot, error) {
+
+	telebot.Webhook{
+		Listen:         "",
+		MaxConnections: 0,
+		AllowedUpdates: nil,
+		HasCustomCert:  false,
+		PendingUpdates: 0,
+		ErrorUnixtime:  0,
+		ErrorMessage:   "",
+		TLS:            nil,
+		Endpoint:       nil,
+	}
+
 	bot, err := telebot.NewBot(telebot.Settings{
 		URL: telebot.DefaultApiURL,
 

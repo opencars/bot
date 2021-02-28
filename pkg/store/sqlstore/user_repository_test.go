@@ -1,11 +1,11 @@
 package sqlstore_test
 
 import (
-	"github.com/opencars/bot/pkg/domain"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/opencars/bot/pkg/domain"
 	"github.com/opencars/bot/pkg/store/sqlstore"
 )
 

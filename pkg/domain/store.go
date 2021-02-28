@@ -15,4 +15,3 @@ type UpdateRepository interface {
 	Create(update *Update) error
 	FindByID(id int) (*Update, error)
 }
-
