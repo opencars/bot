@@ -50,7 +50,7 @@ func NewBot(conf *config.Bot, v domain.VehicleService, m domain.MessageService, 
 }
 
 func (b *Bot) Process(ctx context.Context) error {
-	// logger.Infof("logged in as %s", b.Client.Me.)
+	logger.Infof("Logged in as %s", b.client.Me.Username)
 
 	b.client.Handle(telebot.OnText, func(m *telebot.Message) {
 		if number.MatchString(m.Text) {
