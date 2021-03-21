@@ -2,15 +2,11 @@ log:
   level: "debug"
   mode:  "dev"
 
-server:
-  shutdown_timeout: "15s"
-  read_timeout: "10s"
-  write_timeout: "10s"
-  idle_timeout: "10s"
-
-autoria:
-  api_key: "fuck_you"
-  period: "1h"
+# server:
+  # shutdown_timeout: "15s"
+  # read_timeout: "10s"
+  # write_timeout: "10s"
+  # idle_timeout: "10s"
 
 database:
   host: "127.0.0.1"
@@ -19,3 +15,12 @@ database:
   password: "password"
   database: "bot"
   ssl_mode: "disable"
+
+bot:
+  token: "xxx-xxx"
+  url: "http://localhost:3000"
+
+grpc:
+  vehicle:
+    host: 0.0.0.0
+    port: 3003

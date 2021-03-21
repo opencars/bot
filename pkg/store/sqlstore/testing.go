@@ -11,7 +11,7 @@ import (
 )
 
 // TestDB returns special test connection and teardown function.
-func TestDB(t *testing.T, conf *config.Store) (*Store, func(...string)) {
+func TestDB(t *testing.T, conf *config.Database) (*Store, func(...string)) {
 	t.Helper()
 
 	store, err := New(conf)

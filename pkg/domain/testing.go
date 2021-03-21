@@ -1,8 +1,7 @@
-package model
+package domain
 
 import (
 	"testing"
-	"time"
 )
 
 // TestUser returns example of valid User entity.
@@ -21,13 +20,13 @@ func TestUser(t *testing.T) *User {
 }
 
 // TestUpdate returns example of valid Update entity.
-func TestUpdate(t *testing.T) *Update {
-	t.Helper()
+// func TestMessage(t *testing.T) *Message {
+// 	t.Helper()
 
-	return &Update{
-		ID:     1,
-		UserID: 9999999999,
-		Text:   "/start",
-		Time:   time.Unix(1584916221, 0).UTC(),
-	}
-}
+// 	return &Message{
+// 		ID:     1,
+// 		UserID: 9999999999,
+// 		Text:   "/start",
+// 		Time:   time.Unix(1584916221, 0).UTC(),
+// 	}
+// }

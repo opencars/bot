@@ -7,12 +7,10 @@ import (
 	"github.com/opencars/bot/pkg/config"
 )
 
-var (
-	conf *config.Store
-)
+var conf *config.Database
 
 func TestMain(m *testing.M) {
-	conf = &config.Store{
+	conf = &config.Database{
 		Host:     os.Getenv("DATABASE_HOST"),
 		Port:     5432,
 		User:     "postgres",

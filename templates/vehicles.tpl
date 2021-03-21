@@ -1,10 +1,15 @@
-{{ if len .Registrations }}
-{{ range $i, $registration := .Registrations -}}
+Всього: <b>{{ len .Vehicles }}</b> транспортних засобів
+
+{{ range $vehicle := .Vehicles -}}
+<b>{{ .Brand }} {{ .Model }} {{ .Year }}</b>
+<b>VIN: </b><a href="https://www.opencars.app/vin/{{ .Vin }}">{{ .Vin }}</a>
+<b>Перша реєстрація: </b>{{ .FirstRegDate.Day | printf "%02d" }}.{{ .FirstRegDate.Month | printf "%02d" }}.{{ .FirstRegDate.Year }}
+
+{{ range $no := .Registrations -}}
 <b>Номер: </b><a href="https://www.opencars.app/number/{{ .Number }}">{{ .Number }}</a>
 <b>Номер документа: </b><a href="https://www.opencars.app/code/{{ .Code }}">{{ .Code }}</a>
 <b>Марка: </b>{{ .Brand }}
 <b>Модель: </b>{{ .Model }}
-<b>VIN: </b><a href="https://www.opencars.app/vin/{{ .VIN }}">{{ .VIN }}</a>
 <b>Колір: </b>{{ .Color }}
 <b>Тип: </b>{{ .Kind }}
 <b>Рік випуску: </b>{{ .Year }}
@@ -16,22 +21,11 @@
 {{- if .Fuel }}<b>
 Тип пального: </b>{{ .Fuel }}
 {{- end }}
-<b>Категорія: </b>{{ .RankCategory }}
-{{- if .NumStanding }}
-<b>Кількість стоячих місць: </b>{{ .NumStanding }}
-{{- end }}
+<b>Категорія: </b>{{ .Category }}
 {{- if .NumSeating }}
 <b>Кількість сидячих місць: </b>{{ .NumSeating }}
 {{- end }}
-<b>Дата першої реєстрації: </b>{{ .FirstRegDate }}
-<b>Дата реєстрації: </b>{{ .Date }}
+<b>Дата реєстрації: </b>{{ .Date.Day | printf "%02d" }}.{{ .Date.Month | printf "%02d" }}.{{ .Date.Year }}
+{{ end }}
 
-{{ end }}
-{{ else }}
-{{ with .Number }}
-Дані за номером <b>{{ . }}</b> не знайдені.
-{{ end }}
-{{ with .Code }}
-Дані за номером свідоцтва про реєстрацію <b>{{ . }}</b> не знайдені.
-{{ end }}
 {{ end }}
