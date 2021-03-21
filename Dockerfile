@@ -4,24 +4,29 @@ ENV GO111MODULE=on
 
 WORKDIR /go/src/app
 
-LABEL maintainer="github@shal.dev"
+LABEL maintainer="ashanaakh@gmail.com"
 
-RUN apk add bash git gcc g++ libc-dev
+RUN apk add ca-certificates git make
 
 COPY go.mod go.sum ./
+
 RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o /go/bin/bot ./cmd/bot/main.go
+RUN export BLDDIR=/go/bin && \
+    make clean && \
+    make build
 
 FROM alpine
 
-RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
+RUN apk update && apk upgrade
 
 WORKDIR /app
 
-COPY --from=build /go/bin/bot ./bot
-COPY templates/ templates/
+COPY --from=build /go/bin/ ./
+COPY ./config ./config
 
-ENTRYPOINT ["./bot"]
+EXPOSE 8080
+
+CMD ["./bot","-port", "8080"]
