@@ -2,14 +2,18 @@ package config
 
 import (
 	"os"
+	"strconv"
 
 	"gopkg.in/yaml.v2"
 )
 
 // Config represents mix of settings for the app.
 type Config struct {
-	AutoRia AutoRia `yaml:"autoria"`
-	Store   Store   `yaml:"database"`
+	Log      Log      `yaml:"log"`
+	Server   Server   `yaml:"server"`
+	Database Database `yaml:"database"`
+	GRPC     GRPC     `yaml:"grpc"`
+	Bot      Bot      `yaml:"bot"`
 }
 
 // Server represents settings for creating http server.
@@ -29,17 +33,36 @@ type Log struct {
 // AutoRia represents configuration for the AutoRia API.
 type AutoRia struct {
 	Period Duration `yaml:"period"`
-	ApiKey string   `yaml:"api_key"`
+	APIKey string   `yaml:"api_key"`
 }
 
 // Store represents configuration for the storage.
-type Store struct {
+type Database struct {
 	Host     string `yaml:"host"`
 	Port     int    `yaml:"port"`
 	User     string `yaml:"username"`
 	Password string `yaml:"password"`
 	Database string `yaml:"database"`
 	SSLMode  string `yaml:"ssl_mode"`
+}
+
+type GRPC struct {
+	Vehicle ServiceGRPC `yaml:"vehicle"`
+}
+
+type ServiceGRPC struct {
+	Host string `yaml:"host"`
+	Port int    `yaml:"port"`
+}
+
+type Bot struct {
+	URL            string `yaml:"url"`
+	Token          string `yaml:"token"`
+	MaxConnections *int   `yaml:"max_connections"`
+}
+
+func (s *ServiceGRPC) Address() string {
+	return s.Host + ":" + strconv.Itoa(s.Port)
 }
 
 // New reads application configuration from specified file path.

@@ -6,37 +6,26 @@ import (
 	"github.com/jmoiron/sqlx"
 
 	"github.com/opencars/bot/pkg/config"
-	"github.com/opencars/bot/pkg/store"
+	"github.com/opencars/bot/pkg/domain"
 )
 
 type Store struct {
 	db *sqlx.DB
 
-	userRepository   *UserRepository
-	updateRepository *UpdateRepository
+	messageRepository *MessageRepository
 }
 
-func (s *Store) User() store.UserRepository {
-	if s.userRepository == nil {
-		s.userRepository = &UserRepository{
-			store: s,
+func (s *Store) Message() domain.MessageRepository {
+	if s.messageRepository == nil {
+		s.messageRepository = &MessageRepository{
+			s: s,
 		}
 	}
 
-	return s.userRepository
+	return s.messageRepository
 }
 
-func (s *Store) Update() store.UpdateRepository {
-	if s.updateRepository == nil {
-		s.updateRepository = &UpdateRepository{
-			store: s,
-		}
-	}
-
-	return s.updateRepository
-}
-
-func New(conf *config.Store) (*Store, error) {
+func New(conf *config.Database) (*Store, error) {
 	dataSourceName := fmt.Sprintf("host=%s port=%d user=%s dbname=%s sslmode=%s password=%s",
 		conf.Host, conf.Port, conf.User, conf.Database, conf.SSLMode, conf.Password,
 	)
