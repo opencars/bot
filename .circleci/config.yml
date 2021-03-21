@@ -8,9 +8,9 @@ jobs:
           GO111MODULE: "on"
       - image: circleci/postgres:12
         environment:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: bot
+          POSTGRES_USER: "postgres"
+          POSTGRES_PASSWORD: "password"
+          POSTGRES_DB: "bot"
     working_directory: /go/src/github.com/opencars/bot
     steps:
       - checkout
@@ -28,7 +28,7 @@ jobs:
             - "/go/pkg/mod"
 
       - run:
-          name: "Waiting for Postgres to be ready"
+          name: Waiting for Postgres to be ready
           command: |
             for i in `seq 1 10`;
             do
@@ -52,14 +52,12 @@ jobs:
 
       - run:
           name: "Lint Code"
-          environment:
-            GO111MODULE: "on"
           command: |
-            go get github.com/golangci/golangci-lint/cmd/golangci-lint
-            golangci-lint run
+            wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.27.0
+            ./bin/golangci-lint run
 
       - run:
-          name: "Build Project Binary"
+          name: Build Project Binary
           command: |
             go build -o ./bin/bot ./cmd/bot/main.go
 
