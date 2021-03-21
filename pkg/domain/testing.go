@@ -1,10 +1,12 @@
 package domain
 
 import (
+	"math"
+	"math/rand"
 	"testing"
+	"time"
 )
 
-// TestUser returns example of valid User entity.
 func TestUser(t *testing.T) *User {
 	t.Helper()
 
@@ -19,14 +21,16 @@ func TestUser(t *testing.T) *User {
 	}
 }
 
-// TestUpdate returns example of valid Update entity.
-// func TestMessage(t *testing.T) *Message {
-// 	t.Helper()
+func TestMessage(t *testing.T) *Message {
+	t.Helper()
 
-// 	return &Message{
-// 		ID:     1,
-// 		UserID: 9999999999,
-// 		Text:   "/start",
-// 		Time:   time.Unix(1584916221, 0).UTC(),
-// 	}
-// }
+	return &Message{
+		ID: rand.Intn(math.MaxInt32),
+		User: User{
+			ID:        rand.Intn(math.MaxInt32),
+			FirstName: "John",
+		},
+		Text: "/start",
+		Time: time.Unix(1584916221, 0).UTC(),
+	}
+}

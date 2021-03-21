@@ -1,10 +1,5 @@
 package domain
 
-var (
-	// ErrRemoteFailed
-	ErrRemoteFailed = NewError("remote failed")
-)
-
 type Error struct {
 	text string
 }
