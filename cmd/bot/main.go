@@ -16,7 +16,7 @@ import (
 
 func main() {
 	cfg := flag.String("config", "config/config.yaml", "Path to the configuration file")
-	port := flag.Int("port", 3000, "Port of the server")
+	port := flag.Int("port", 8080, "Port of the server")
 
 	flag.Parse()
 
