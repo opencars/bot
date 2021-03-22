@@ -1,7 +1,5 @@
 FROM golang:1.16-alpine AS build
 
-ENV GO111MODULE=on
-
 WORKDIR /go/src/app
 
 LABEL maintainer="ashanaakh@gmail.com"
@@ -26,6 +24,7 @@ WORKDIR /app
 
 COPY --from=build /go/bin/ ./
 COPY ./config ./config
+COPY ./templates ./templates
 
 EXPOSE 8080
 
