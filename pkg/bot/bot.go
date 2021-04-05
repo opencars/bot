@@ -24,7 +24,8 @@ type Bot struct {
 
 func NewBot(conf *config.Bot, v domain.VehicleService, m domain.MessageService, addr string) (*Bot, error) {
 	w := telebot.Webhook{
-		Listen: addr,
+		Listen:         addr,
+		AllowedUpdates: []string{"message"},
 		Endpoint: &telebot.WebhookEndpoint{
 			PublicURL: conf.URL,
 		},
