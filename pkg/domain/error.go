@@ -1,5 +1,9 @@
 package domain
 
+var (
+	ErrNotRecognized = NewError("number plate is not recognized")
+)
+
 type Error struct {
 	text string
 }

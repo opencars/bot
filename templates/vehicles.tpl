@@ -1,9 +1,16 @@
+{{- if .Request.Number }}
+<b>{{ .Request.Number }}</b>
+{{- end }}
+{{- if .Request.VIN }}
+<b>{{ .Request.VIN }}</b>
+{{- end }}
+
 Всього: <b>{{ len .Vehicles }}</b> транспортних засобів
 
 {{ range $vehicle := .Vehicles -}}
 <b>{{ .Brand }} {{ .Model }} {{ .Year }}</b>
-<b>VIN: </b><a href="https://www.opencars.app/vin/{{ .Vin }}">{{ .Vin }}</a>
-<b>Перша реєстрація: </b>{{ .FirstRegDate.Day | printf "%02d" }}.{{ .FirstRegDate.Month | printf "%02d" }}.{{ .FirstRegDate.Year }}
+<b>VIN: </b><a href="https://www.opencars.app/vin/{{ .VIN }}">{{ .VIN }}</a>
+<b>Перша реєстрація: </b>{{ .FirstRegDate.Format "02.01.2006" }}
 
 {{ range $no := .Registrations -}}
 <b>Номер: </b><a href="https://www.opencars.app/number/{{ .Number }}">{{ .Number }}</a>
@@ -25,7 +32,7 @@
 {{- if .NumSeating }}
 <b>Кількість сидячих місць: </b>{{ .NumSeating }}
 {{- end }}
-<b>Дата реєстрації: </b>{{ .Date.Day | printf "%02d" }}.{{ .Date.Month | printf "%02d" }}.{{ .Date.Year }}
+<b>Дата реєстрації: </b>{{ .Date.Format "02.01.2006" }}
 {{ end }}
 
 {{ end }}

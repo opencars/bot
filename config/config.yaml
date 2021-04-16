@@ -10,6 +10,10 @@ database:
   database: "bot"
   ssl_mode: "disable"
 
+alpr:
+  url: "https://api.opencars.app"
+  token: "xxx"
+
 bot:
   token: "xxx-xxx"
   url: "http://localhost:3000"
