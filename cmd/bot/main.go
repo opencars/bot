@@ -9,9 +9,11 @@ import (
 
 	"github.com/opencars/bot/pkg/bot"
 	"github.com/opencars/bot/pkg/config"
+	"github.com/opencars/bot/pkg/domain/alpr"
 	"github.com/opencars/bot/pkg/domain/vehicle"
 	"github.com/opencars/bot/pkg/logger"
 	"github.com/opencars/bot/pkg/store/sqlstore"
+	"github.com/opencars/toolkit"
 )
 
 func main() {
@@ -32,7 +34,12 @@ func main() {
 		logger.Fatalf("store: %v", err)
 	}
 
-	svc, err := vehicle.NewService(conf.GRPC.Vehicle.Address())
+	// TODO: Implement gRPC API for ALPR service.
+	r := alpr.NewService(
+		toolkit.New(conf.ALPR.URL, conf.ALPR.Token),
+	)
+
+	svc, err := vehicle.NewService(conf.GRPC.Vehicle.Address(), r)
 	if err != nil {
 		logger.Fatalf("store: %v", err)
 	}

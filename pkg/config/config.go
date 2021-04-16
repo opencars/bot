@@ -14,6 +14,7 @@ type Config struct {
 	Database Database `yaml:"database"`
 	GRPC     GRPC     `yaml:"grpc"`
 	Bot      Bot      `yaml:"bot"`
+	ALPR     ALPR     `yaml:"alpr"`
 }
 
 // Server represents settings for creating http server.
@@ -59,6 +60,11 @@ type Bot struct {
 	URL            string `yaml:"url"`
 	Token          string `yaml:"token"`
 	MaxConnections *int   `yaml:"max_connections"`
+}
+
+type ALPR struct {
+	URL   string `yaml:"url"`
+	Token string `yaml:"token"`
 }
 
 func (s *ServiceGRPC) Address() string {

@@ -53,6 +53,18 @@ func NewBot(conf *config.Bot, v domain.VehicleService, m domain.MessageService, 
 func (b *Bot) Process(ctx context.Context) error {
 	logger.Infof("Logged in as %s", b.client.Me.Username)
 
+	b.client.Handle(telebot.OnPhoto, func(m *telebot.Message) {
+		if err := b.FindByImage(context.TODO(), m); err != nil {
+			logger.Errorf("document: %s", err)
+		}
+	})
+
+	b.client.Handle(telebot.OnDocument, func(m *telebot.Message) {
+		if err := b.FindByImage(context.TODO(), m); err != nil {
+			logger.Errorf("image: %s", err)
+		}
+	})
+
 	b.client.Handle(telebot.OnText, func(m *telebot.Message) {
 		if number.MatchString(m.Text) {
 			if err := b.FindByNumber(context.TODO(), m); err != nil {
