@@ -53,7 +53,7 @@ func convert(in *core.Result) *domain.Result {
 			})
 		}
 
-		result.Vehicles[k] = &vehicle
+		result.Vehicles[vehicle.VIN] = &vehicle
 	}
 
 	return &result
