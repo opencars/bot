@@ -12,7 +12,7 @@ func convert(in *core.Result) *domain.Result {
 		Vehicles: make(map[string]*domain.Vehicle, len(in.Vehicles)),
 	}
 
-	for k, v := range in.Vehicles {
+	for _, v := range in.Vehicles {
 		vehicle := domain.Vehicle{
 			VIN: v.Vin,
 			FirstRegDate: time.Date(
