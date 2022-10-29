@@ -14,7 +14,7 @@ func convert(in *core.Result) *domain.Result {
 
 	for _, v := range in.Vehicles {
 		vehicle := domain.Vehicle{
-			VIN: v.Vin,
+			VIN: v.Vin.Value,
 			FirstRegDate: time.Date(
 				int(v.FirstRegDate.Year),
 				time.Month(v.FirstRegDate.Month),
