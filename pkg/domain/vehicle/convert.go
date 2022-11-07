@@ -59,6 +59,29 @@ func convert(in *core.Result) *domain.Result {
 			})
 		}
 
+		for _, r := range v.Operations {
+			vehicle.Operations = append(vehicle.Operations, domain.Operation{
+				VIN:         r.Vin,
+				Number:      r.Number,
+				Brand:       r.Brand,
+				Model:       r.Model,
+				Color:       r.Color,
+				Kind:        r.Kind,
+				Year:        r.Year,
+				TotalWeight: r.TotalWeight,
+				OwnWeight:   r.OwnWeight,
+				Capacity:    r.Capacity,
+				Fuel:        r.Fuel,
+				Date: time.Date(
+					int(r.Date.Year),
+					time.Month(r.Date.Month),
+					int(r.Date.Day),
+					0, 0, 0, 0,
+					time.UTC,
+				),
+			})
+		}
+
 		result.Vehicles[vehicle.VIN] = &vehicle
 	}
 

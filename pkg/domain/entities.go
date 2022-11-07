@@ -36,6 +36,7 @@ type Vehicle struct {
 	Model         string
 	Year          int32
 	Registrations []Registration
+	Operations    []Operation
 }
 
 type Registration struct {
@@ -54,4 +55,24 @@ type Registration struct {
 	Category    string
 	NumSeating  int32
 	Date        time.Time
+}
+
+type Operation struct {
+	Number      string
+	VIN         string
+	Brand       string
+	Model       string
+	Year        int32
+	Capacity    int32
+	Color       string
+	Fuel        string
+	Kind        string
+	Body        string
+	Purpose     string
+	OwnWeight   int32
+	TotalWeight int32
+	// Action      *RecordAction
+	Date time.Time
+	// Department  *Department
+	// Owner       *Owner
 }
