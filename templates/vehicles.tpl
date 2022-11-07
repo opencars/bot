@@ -12,7 +12,7 @@
 <b>VIN: </b><a href="https://www.opencars.app/vin/{{ .VIN }}">{{ .VIN }}</a>
 <b>Перша реєстрація: </b>{{ .FirstRegDate.Format "02.01.2006" }}
 
-{{ range $no := .Registrations -}}
+{{ range $no := .Registrations }}
 <b>Номер: </b><a href="https://www.opencars.app/number/{{ .Number }}">{{ .Number }}</a>
 <b>Номер документа: </b><a href="https://www.opencars.app/code/{{ .Code }}">{{ .Code }}</a>
 <b>Марка: </b>{{ .Brand }}
