@@ -8,7 +8,7 @@ import (
 
 	"github.com/opencars/bot/pkg/config"
 	"github.com/opencars/bot/pkg/domain"
-	"github.com/opencars/bot/pkg/logger"
+	"github.com/opencars/seedwork/logger"
 )
 
 var (

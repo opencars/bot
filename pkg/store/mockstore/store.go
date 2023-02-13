@@ -9,7 +9,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	domain "github.com/opencars/bot/pkg/domain"
+	model "github.com/opencars/bot/pkg/domain/model"
 )
 
 // MockMessageRepository is a mock of MessageRepository interface.
@@ -36,7 +36,7 @@ func (m *MockMessageRepository) EXPECT() *MockMessageRepositoryMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockMessageRepository) Create(arg0 context.Context, arg1 *domain.Message) error {
+func (m *MockMessageRepository) Create(arg0 context.Context, arg1 *model.Message) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1)
 	ret0, _ := ret[0].(error)

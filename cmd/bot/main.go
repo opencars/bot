@@ -11,8 +11,8 @@ import (
 	"github.com/opencars/bot/pkg/config"
 	"github.com/opencars/bot/pkg/domain/alpr"
 	"github.com/opencars/bot/pkg/domain/vehicle"
-	"github.com/opencars/bot/pkg/logger"
 	"github.com/opencars/bot/pkg/store/sqlstore"
+	"github.com/opencars/seedwork/logger"
 	"github.com/opencars/toolkit"
 )
 

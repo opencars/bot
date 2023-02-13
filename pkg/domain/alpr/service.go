@@ -15,6 +15,7 @@ func NewService(client *toolkit.Client) *Service {
 		client: client,
 	}
 }
+
 func (s *Service) Recognize(ctx context.Context, url string) ([]toolkit.ResultALPR, error) {
 	resp, err := s.client.ALPR().Recognize(url)
 	if err != nil {

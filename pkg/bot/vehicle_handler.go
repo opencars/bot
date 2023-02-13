@@ -8,8 +8,8 @@ import (
 
 	"gopkg.in/tucnak/telebot.v2"
 
-	"github.com/opencars/bot/pkg/domain"
-	"github.com/opencars/bot/pkg/logger"
+	"github.com/opencars/bot/pkg/domain/model"
+	"github.com/opencars/seedwork/logger"
 )
 
 func (b *Bot) FindByNumber(ctx context.Context, m *telebot.Message) error {
@@ -85,7 +85,7 @@ func (b *Bot) FindByImage(ctx context.Context, m *telebot.Message) error {
 	}
 
 	vehicle, err := b.vehicle.FindByImage(ctx, url)
-	if errors.Is(err, domain.ErrNotRecognized) {
+	if errors.Is(err, model.ErrNotRecognized) {
 		if _, err := b.client.Reply(m, "not found"); err != nil {
 			return err
 		}

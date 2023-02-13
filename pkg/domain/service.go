@@ -3,13 +3,14 @@ package domain
 import (
 	"context"
 
+	"github.com/opencars/bot/pkg/domain/model"
 	"github.com/opencars/toolkit"
 )
 
 type VehicleService interface {
-	FindByNumber(ctx context.Context, number string) (*Result, error)
-	FindByVIN(ctx context.Context, vin string) (*Result, error)
-	FindByImage(ctx context.Context, url string) (*Result, error)
+	FindByNumber(ctx context.Context, number string) (*model.Result, error)
+	FindByVIN(ctx context.Context, vin string) (*model.Result, error)
+	FindByImage(ctx context.Context, url string) (*model.Result, error)
 }
 
 type Recognizer interface {
@@ -17,5 +18,5 @@ type Recognizer interface {
 }
 
 type MessageService interface {
-	Create(ctx context.Context, msg *Message) error
+	Create(ctx context.Context, msg *model.Message) error
 }

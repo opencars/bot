@@ -1,7 +1,11 @@
 package domain
 
-import "context"
+import (
+	"context"
+
+	"github.com/opencars/bot/pkg/domain/model"
+)
 
 type MessageRepository interface {
-	Create(ctx context.Context, msg *Message) error
+	Create(ctx context.Context, msg *model.Message) error
 }

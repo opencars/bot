@@ -9,8 +9,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	domain "github.com/opencars/bot/pkg/domain"
-	core "github.com/opencars/grpc/pkg/core"
+	model "github.com/opencars/bot/pkg/domain/model"
 )
 
 // MockVehicleService is a mock of VehicleService interface.
@@ -36,11 +35,26 @@ func (m *MockVehicleService) EXPECT() *MockVehicleServiceMockRecorder {
 	return m.recorder
 }
 
+// FindByImage mocks base method.
+func (m *MockVehicleService) FindByImage(arg0 context.Context, arg1 string) (*model.Result, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindByImage", arg0, arg1)
+	ret0, _ := ret[0].(*model.Result)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindByImage indicates an expected call of FindByImage.
+func (mr *MockVehicleServiceMockRecorder) FindByImage(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByImage", reflect.TypeOf((*MockVehicleService)(nil).FindByImage), arg0, arg1)
+}
+
 // FindByNumber mocks base method.
-func (m *MockVehicleService) FindByNumber(arg0 context.Context, arg1 string) (*core.Result, error) {
+func (m *MockVehicleService) FindByNumber(arg0 context.Context, arg1 string) (*model.Result, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindByNumber", arg0, arg1)
-	ret0, _ := ret[0].(*core.Result)
+	ret0, _ := ret[0].(*model.Result)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -52,10 +66,10 @@ func (mr *MockVehicleServiceMockRecorder) FindByNumber(arg0, arg1 interface{}) *
 }
 
 // FindByVIN mocks base method.
-func (m *MockVehicleService) FindByVIN(arg0 context.Context, arg1 string) (*core.Result, error) {
+func (m *MockVehicleService) FindByVIN(arg0 context.Context, arg1 string) (*model.Result, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindByVIN", arg0, arg1)
-	ret0, _ := ret[0].(*core.Result)
+	ret0, _ := ret[0].(*model.Result)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -90,7 +104,7 @@ func (m *MockMessageService) EXPECT() *MockMessageServiceMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockMessageService) Create(arg0 context.Context, arg1 *domain.Message) error {
+func (m *MockMessageService) Create(arg0 context.Context, arg1 *model.Message) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1)
 	ret0, _ := ret[0].(error)

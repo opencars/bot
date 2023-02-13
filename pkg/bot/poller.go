@@ -6,7 +6,8 @@ import (
 	"gopkg.in/tucnak/telebot.v2"
 
 	"github.com/opencars/bot/pkg/domain"
-	"github.com/opencars/bot/pkg/logger"
+	"github.com/opencars/bot/pkg/domain/model"
+	"github.com/opencars/seedwork/logger"
 )
 
 type Poller struct {
@@ -41,9 +42,9 @@ func (p *Poller) Poll(b *telebot.Bot, updates chan telebot.Update, stop chan str
 				"time":      upd.Message.Time(),
 			}).Infof("incoming message")
 
-			msg := domain.Message{
+			msg := model.Message{
 				ID: upd.Message.ID,
-				User: domain.User{
+				User: model.User{
 					ID:        int(upd.Message.Chat.ID),
 					FirstName: upd.Message.Chat.FirstName,
 				},

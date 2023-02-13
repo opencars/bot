@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/opencars/bot/pkg/domain"
+	"github.com/opencars/bot/pkg/domain/model"
 )
 
 type Service struct {
@@ -16,6 +17,6 @@ func NewService(r domain.MessageRepository) (*Service, error) {
 	}, nil
 }
 
-func (s *Service) Create(ctx context.Context, msg *domain.Message) error {
+func (s *Service) Create(ctx context.Context, msg *model.Message) error {
 	return s.r.Create(ctx, msg)
 }

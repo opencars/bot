@@ -4,14 +4,14 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/opencars/bot/pkg/domain"
+	"github.com/opencars/bot/pkg/domain/model"
 )
 
 type MessageRepository struct {
 	s *Store
 }
 
-func (r *MessageRepository) Create(ctx context.Context, message *domain.Message) error {
+func (r *MessageRepository) Create(ctx context.Context, message *model.Message) error {
 	tx, err := r.s.db.BeginTxx(ctx, &sql.TxOptions{Isolation: 0, ReadOnly: false})
 	if err != nil {
 		return err
