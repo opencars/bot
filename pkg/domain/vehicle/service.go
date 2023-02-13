@@ -8,6 +8,7 @@ import (
 	"github.com/opencars/grpc/pkg/core"
 	"github.com/opencars/translit"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type Service struct {
@@ -16,7 +17,7 @@ type Service struct {
 }
 
 func NewService(addr string, r domain.Recognizer) (*Service, error) {
-	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, err
 	}
